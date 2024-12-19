@@ -1,5 +1,9 @@
 # chatAppMERN
 
+# EXTENSIONES
+
+- VScoe great icons
+
 - # backend
 - # 1)
 
@@ -183,7 +187,7 @@
     });
     ```
 
-- # 8) ahora si uso la base de datos: `backend/src/lib/db.js`
+- # 8) ahora si uso y conecto la base de datos: `backend/src/lib/db.js`
 
   ```js
   import mongoose from 'mongoose';
@@ -227,7 +231,45 @@
     ```
 
   - ## 8.3) voy al "network access" n la imagen 8 y activo
+
     ![alt text](images/8mg.png)
+
+  - ## 8.4) voy al cluster
+    ![alt text](images/9mg.png)
+
+- # 9) Creando los modelos: `backend/src/models/user.model.js`
+
+  ```js
+  import mongoose from 'mongoose';
+
+  const userSchema = new mongoose.Schema(
+    {
+      email: {
+        type: String,
+        required: true,
+        unique: true,
+      },
+      fullName: {
+        type: String,
+        required: true,
+      },
+      password: {
+        type: String,
+        required: true,
+        minlength: 6,
+      },
+      profilePic: {
+        type: String,
+        default: '',
+      },
+    },
+    { timestamps: true }
+  );
+  //------el modelo se crea en singular siempre y con la primera letra mayuscula, por ejemplo User para users
+  const User = mongoose.model('User', userSchema);
+
+  export default User;
+  ```
 
 ```
 
