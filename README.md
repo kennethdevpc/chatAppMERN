@@ -239,6 +239,8 @@
 
 - # 9) Creando los modelos: `backend/src/models/user.model.js`
 
+  - similar a punto 17 aqui [cursoNode](https://github.com/kennethdevpc/projectNodeBR/blob/master/pasos2024.txt#L2334)
+
   ```js
   import mongoose from 'mongoose';
 
@@ -270,6 +272,62 @@
 
   export default User;
   ```
+
+- # 10) desbo usar antes que todo `backend/src/index.js`
+
+  ```js
+    ....//rutas
+    app.use(express.json());
+
+  ```
+
+- # 11) ahora si el uso del modelo para la creacion y duardado en DB uso JWT y Cookie
+
+  - el hasheo es similar al punto 21: [cursoNode](https://github.com/kennethdevpc/projectNodeBR/blob/master/pasos2024.txt#L2334)
+
+    - en MySql es diferencte la creacion :
+
+    ```js
+    const usuario = await Usuario.create({
+      nombre,
+      email,
+      password,
+    });
+    ```
+
+    -como nota importante es que en ese proyecto se uso helpers en vez de la carpeta Lib, se que se usa en este proyecto, esto con el fin ve tener una estructura mas moderna con el lib
+
+    - ## 11.1) creo la plalabra clave para el utils.js: `backend/src/lib/utils.js`
+
+      y evitando cross and request, y cookie tal como en el punto 24, y JWT( json web token) con cookie 28) [cursoNode](https://github.com/kennethdevpc/projectNodeBR/blob/master/pasos2024.txt#L2334)
+
+      - primero creo en el .env la palabra secreta: **U: backend/.env**
+        ```.env
+        JWT_SECRET=cualquierPalabra
+        ```
+
+    - ## 11.2)creo el utils.js: `backend/src/lib/utils.js`
+
+      ```js
+      import jwt from 'jsonwebtoken';
+
+      export const generateToken = (userId, res) => {
+        const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
+          expiresIn: '7d',
+        });
+        //------jwt solo sera un nombre puede ser como quiere qu ese lea
+        res.cookie('jwt', token, {
+          maxAge: 7 * 24 * 60 * 60 * 1000, // MS
+          httpOnly: true, // prevent XSS attacks cross-site scripting attacks
+          sameSite: 'strict', // CSRF attacks cross-site request forgery attacks
+          secure: process.env.NODE_ENV !== 'development',
+        });
+
+        return token;
+      };
+      ```
+
+-
 
 ```
 

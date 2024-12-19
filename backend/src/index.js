@@ -6,6 +6,8 @@ import { connectDB } from './lib/db.js'; //---importo la conexion a la base de d
 import authRouters from './routes/auth.route.js';
 const app = express();
 const PORT = process.env.PORT;
+
+app.use(express.json());
 app.get('/', (req, res) => {
   res.send('hola');
 });
