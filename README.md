@@ -189,6 +189,8 @@
 
 - # 8) ahora si uso y conecto la base de datos: `backend/src/lib/db.js`
 
+  -¿Qué contiene típicamente lib? Funciones de utilidad (helpers).Módulos personalizados o adaptaciones de librerías externas. Clases u objetos relacionados con la lógica del negocio o Infraestructura.
+
   ```js
   import mongoose from 'mongoose';
   export const connectDB = async () => {
@@ -239,6 +241,7 @@
 
 - # 9) Creando los modelos: `backend/src/models/user.model.js`
 
+  - hay que tener en cuenta que MongoDB automaticamente genera iun "id" sin embargo lo genera como "\_id"
   - similar a punto 17 aqui [cursoNode](https://github.com/kennethdevpc/projectNodeBR/blob/master/pasos2024.txt#L2334)
 
   ```js
@@ -295,7 +298,7 @@
     });
     ```
 
-    -como nota importante es que en ese proyecto se uso helpers en vez de la carpeta Lib, se que se usa en este proyecto, esto con el fin ve tener una estructura mas moderna con el lib
+    -como nota importante es que en ese proyecto se uso helpers en vez de la carpeta Lib, sin embargo el helper , se que se usa en este proyecto, esto con el fin ve tener una estructura mas moderna con el lib
 
     - ## 11.1) creo la plalabra clave para el utils.js: `backend/src/lib/utils.js`
 
@@ -306,7 +309,7 @@
         JWT_SECRET=cualquierPalabra
         ```
 
-    - ## 11.2)creo el utils.js: `backend/src/lib/utils.js`
+    - ## 11.2)creo el utils.js : `backend/src/lib/utils.js` Genero token
 
       ```js
       import jwt from 'jsonwebtoken';
@@ -327,7 +330,261 @@
       };
       ```
 
--
+- # 12) voy al cotrolador creo un usuario y un token:`backend/src/controllers/auth.controller.js`
+
+  ```js
+  //---signup
+  export const signup = async (req, res) => {
+    const { fullName, email, password } = req.body;
+    try {
+      if (!fullName || !email || !password) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+      if (password.length < 6) {
+        return res.status(400).json({ message: 'Password must be at least 6 characters' });
+      }
+      const user = await User.findOne({ email });
+      if (user) return res.status(400).json({ message: 'Email already exists' });
+      const salt = await bcrypt.genSalt(10); //---Punto 21) del proyecto cursoNode
+      const hashedPassword = await bcrypt.hash(password, salt);
+      //--------------cre un nuevo usuario
+      const newUser = new User({
+        //--------En mongo se crea un new user, en mysql es con create,
+        fullName,
+        email,
+        password: hashedPassword,
+      });
+      if (newUser) {
+        //------------generate jwt token here
+        generateToken(newUser._id, res);
+        await newUser.save();
+        res.status(201).json({
+          _id: newUser._id,
+          fullName: newUser.fullName,
+          email: newUser.email,
+          profilePic: newUser.profilePic,
+        });
+      } else {
+        res.status(400).json({ message: 'Invalid user data' });
+      }
+    } catch (error) {
+      console.log('Error in signup controller', error.message);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  };
+  ```
+
+- # 13) probando en postman:
+
+  ![imagen ](images/10pm.png)
+  la cookie
+  ![imagen2 Coockie ](images/10pm.png)
+
+  - En Mongo debe dar asi:
+    ![imagen ](images/11mg.png)
+
+- # 14 DEBO AGREGAR EL cookieParser
+
+  - #### u: `backend/src/index.js`
+
+    ```js
+    import express from 'express';
+    import dotenv from 'dotenv';
+    import cookieParser from 'cookie-parser'; //------importo el cookieparser
+    dotenv.config();
+    import { connectDB } from './lib/db.js';
+    import authRouters from './routes/auth.route.js';
+    const app = express();
+    const PORT = process.env.PORT;
+
+    app.use(express.json());
+    app.use(cookieParser()); //---------usando el coookieParser
+    app.get('/', (req, res) => {
+      res.send('hola');
+    });
+    app.use('/api/auth', authRouters);
+    app.listen(PORT, () => {
+      console.log('Server is running on port ', PORT, `http://localhost:${PORT}/`);
+      connectDB(); //------conecto la base de datos
+    });
+    ```
+
+- # 14.1) voy al controlador y creo el resto de funcionalidades:
+
+  - #### U: `backend/src/controllers/auth.controller.js`
+
+  - ## 14.2) login
+
+    Aqui hago el compare de bcryp, tal como en el punto 27.2) del proyecto [cursoNode](https://github.com/kennethdevpc/projectNodeBR/blob/master/pasos2024.txt#L2334)
+
+    ```js
+    export const login = async (req, res) => {
+      const { email, password } = req.body;
+      try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+          return res.status(400).json({ message: 'Invalid credentials' });
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        if (!isPasswordCorrect) {
+          return res.status(400).json({ message: 'Invalid credentials' });
+        }
+
+        generateToken(user._id, res);
+
+        res.status(200).json({
+          _id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          profilePic: user.profilePic,
+        });
+      } catch (error) {
+        console.log('Error in login controller', error.message);
+        res.status(500).json({ message: 'Internal Server Error' });
+      }
+    };
+    ```
+
+    - probando en postman:
+      - `http://localhost:5001/api/auth/login`
+
+  - ## 14.3) logout
+
+    ```js
+    export const logout = (req, res) => {
+      try {
+        res.cookie('jwt', '', { maxAge: 0 });
+        res.status(200).json({ message: 'Logged out successfully' });
+      } catch (error) {
+        console.log('Error in logout controller', error.message);
+        res.status(500).json({ message: 'Internal Server Error' });
+      }
+    };
+    ```
+
+    - probando en postman:
+      - `http://localhost:5001/api/auth/logout`
+
+  - ## 14.3) updateProfile
+
+    - para este es un poco diferente ya que, para actualizar el perfil debo estar previamente logueado o autenticado, por lo tanto voy a tener, que hacer un middleware para que se ejecute para la verificacion de la ruta
+
+    ya que la ruta es esta: `backend/src/routes/auth.route.js`:
+
+    ```js
+    router.put('/update-profile', protectRoute, updateProfile);
+    ```
+
+    - ### 14.3.1) protectRoute creacion de middleware `**protectRoute**` `backend/src/middleware/auth.middleware.js`
+      punto 41 aqui [cursoNode](https://github.com/kennethdevpc/projectNodeBR/blob/master/pasos2024.txt#L2334)
+
+    ```js
+    import jwt from 'jsonwebtoken';
+    import User from '../models/user.model.js';
+
+    export const protectRoute = async (req, res, next) => {
+      try {
+        const token = req.cookies.jwt;
+
+        if (!token) {
+          return res.status(401).json({ message: 'Unauthorized - No Token Provided' });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        if (!decoded) {
+          return res.status(401).json({ message: 'Unauthorized - Invalid Token' });
+        }
+
+        const user = await User.findById(decoded.userId).select('-password');
+
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+        req.user = user;
+
+        next();
+      } catch (error) {
+        console.log('Error in protectRoute middleware: ', error.message);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    };
+    ```
+
+  - ## 14.4) Hosting para imagenes y videos.
+
+    - me dirijo a cloudinary
+      [https://console.cloudinary.com](https://console.cloudinary.com/)
+    - celr la imagen ![imagen ](images/12cl.png)
+    - cloudinary hgenera una nueva key:
+      celr la imagen ![imagen ](images/13cl.png)
+
+    - ### ir al archivo `.env` y copio las claves
+
+      ```.env
+      CLOUDINARY_CLOUD_NAME=diep0nzvsfffss
+      CLOUDINARY_API_KEY=6534111111111111
+      CLOUDINARY_API_SECRET=jOnwDremjfjjjfjfjjfjfjjffjjfj
+      ```
+
+    - ### creo el archivo : `backend/src/lib/cloudinary.js`
+
+      ```js
+      import { v2 as cloudinary } from 'cloudinary';
+
+      import { config } from 'dotenv';
+
+      config();
+      cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+      });
+      export default cloudinary;
+      ```
+
+  - ## 14.5) updateProfile ahora si para ya agregarselo a la ruta
+
+    ```js
+    export const updateProfile = async (req, res) => {
+      try {
+        const { profilePic } = req.body;
+        const userId = req.user._id;
+        if (!profilePic) {
+          return res.status(400).json({ message: 'Profile pic is required' });
+        }
+        const uploadResponse = await cloudinary.uploader.upload(profilePic);
+        const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { profilePic: uploadResponse.secure_url },
+          { new: true }
+        );
+        res.status(200).json(updatedUser);
+      } catch (error) {
+        console.log('error in update profile:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    };
+    ```
+
+  - ## 14.6) creacion del check para ver si esta autenticado: `backend/src/controllers/auth.controller.js`
+
+    - la ruta es:
+      `router.get('/check', protectRoute, checkAuth); `
+
+    ```js
+    export const checkAuth = (req, res) => {
+      try {
+        res.status(200).json(req.user);
+      } catch (error) {
+        console.log('Error in checkAuth controller', error.message);
+        res.status(500).json({ message: 'Internal Server Error' });
+      }
+    };
+    ```
 
 ```
 
@@ -347,4 +604,5 @@
 
 ```
 
+- #
 ```
