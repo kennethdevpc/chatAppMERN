@@ -167,3 +167,244 @@ app.listen(3000, () => {
   console.log('Servidor ejecutándose en http://localhost:3000');
 });
 ```
+
+# teoria mongodb:
+
+- 1. Conceptos Básicos de MongoDB:
+
+  - Ejemplo:
+    Crear una base de datos y colección desde MongoDB Shell:
+
+    ```javascript
+      use myDatabase; // Cambia o crea una base de datos llamada "myDatabase"
+      db.createCollection("users"); // Crea una colección llamada "users"
+    ```
+
+  - 2. Operaciones CRUD
+
+    - Crear (Create):
+
+    ```javascript
+    db.users.insertOne({ name: 'John Doe', age: 30, hobbies: ['reading', 'gaming'] });
+    db.users.insertMany([
+      { name: 'Jane Smith', age: 25, hobbies: ['dancing'] },
+      { name: 'Alice Johnson', age: 35, hobbies: ['running', 'coding'] },
+    ]);
+    ```
+
+    - Leer (Read):
+
+      - find() para consultas básicas.
+      - Operadores de comparación `($eq, $ne, $gt, $lt, $gte, $lte).`
+      - Operadores lógicos `($or, $and, $not).`
+      - Proyección para seleccionar campos específicos.
+
+      ```javascript
+      // Encuentra todos los documentos
+      db.users.find();
+      // Encuentra documentos con condiciones
+      db.users.find({ age: { $gt: 28 } }); // Usuarios mayores de 28 años
+      db.users.find({ name: 'John Doe' }, { hobbies: 1, _id: 0 }); // Proyecta solo los hobbies
+      ```
+
+    - Actualizar (Update):
+      updateOne() y updateMany().
+      Operadores de actualización `($set, $unset, $inc, $rename).`
+
+      - Actualizar (Update):
+
+        ```javascript
+        // Actualiza un solo documento
+        db.users.updateOne({ name: 'John Doe' }, { $set: { age: 31 } });
+
+        // Incrementa la edad de todos los usuarios
+        db.users.updateMany({}, { $inc: { age: 1 } });
+        ```
+
+      - Eliminar (Delete):
+        deleteOne()
+        deleteMany()
+
+        ```javascript
+        Copiar código
+        // Elimina un usuario específico
+        db.users.deleteOne({ name: "Jane Smith" });
+
+        // Elimina todos los usuarios mayores de 40
+        db.users.deleteMany({ age: { $gt: 40 } });
+        ```
+
+    - Filtrado de Datos
+
+      - Operadores de comparación: `$in, $nin.`
+      - Consultas avanzadas con combinaciones de operadores.
+      - Filtrar documentos anidados (uso de `dot notation`).
+        - Ejemplo:
+
+      ```javascript
+      // Usuarios con edad entre 25 y 35
+      db.users.find({ age: { $gte: 25, $lte: 35 } });
+      // Usuarios con nombre "John" o "Alice"
+      db.users.find({ name: { $in: ['John Doe', 'Alice Johnson'] } });
+      ```
+
+  - Índices y Performance
+
+    - Creación de índices (createIndex()).
+    - Índices compuestos y únicos.
+    - Análisis de consultas (explain()).
+
+      ```js
+      // Crear un índice en el campo "name"
+      db.users.createIndex({ name: 1 });
+
+      // Verificar índices
+      db.users.getIndexes();
+      ```
+
+  - Agregaciones (Aggregation Framework)
+
+    - Pipeline de agregación:
+      - $match para filtrar documentos.
+      - $group para agrupar datos.
+      - $project para transformar documentos.
+      - $sort, $limit, $skip para manipular resultados.
+      - $lookup para hacer joins entre colecciones.
+      - $unwind para descomponer arrays.
+
+    ```js
+    db.users.aggregate([
+      { $match: { age: { $gte: 30 } } }, // Filtrar usuarios con edad >= 30
+      { $group: { _id: '$age', count: { $sum: 1 } } }, // Agrupar por edad
+      { $sort: { count: -1 } }, // Ordenar por cantidad descendente
+    ]);
+    ```
+
+  - Manipulación de Arrays
+
+    ```js
+    // Usuarios que tienen "reading" en hobbies
+    db.users.find({ hobbies: 'reading' });
+
+    // Actualiza arrays
+    db.users.updateOne({ name: 'John Doe' }, { $push: { hobbies: 'traveling' } });
+    ```
+
+  - Modelado de Datos
+    Ejemplo:
+
+    - Relación embebida:
+
+    ```js
+    db.orders.insertOne({
+      orderId: 1,
+      user: { name: 'John Doe', email: 'john@example.com' },
+      items: [{ product: 'Book', price: 15 }],
+    });
+    ```
+
+    - Relación referenciada:
+
+    ```javascript
+    Copiar código
+    db.users.insertOne({ _id: ObjectId("123"), name: "John Doe" });
+    db.orders.insertOne({ orderId: 1, userId: ObjectId("123"), items: [{ product: "Book", price: 15 }] });
+    ```
+
+- 2. Usando la Biblioteca Nativa de MongoDB (mongodb)
+     Esta es la biblioteca oficial que interactúa directamente con MongoDB. Aquí tú mismo gestionas todas las operaciones (e.g., conexión, creación de documentos, consultas) sin un nivel adicional de abstracción.
+
+  - Ejemplo básico con mongodb:
+
+  ```js
+  const { MongoClient } = require('mongodb');
+
+  const uri = 'your_mongo_connection_string';
+  const client = new MongoClient(uri);
+
+  const run = async () => {
+    try {
+      await client.connect(); // Conectar al servidor
+      console.log('Connected to MongoDB');
+
+      const db = client.db('test'); // Seleccionar la base de datos
+      const usersCollection = db.collection('users'); // Seleccionar la colección
+
+      // Insertar un documento
+      const result = await usersCollection.insertOne({ name: 'John', age: 30 });
+      console.log('Inserted document:', result.insertedId);
+
+      // Leer documentos
+      const users = await usersCollection.find().toArray();
+      console.log('Users:', users);
+
+      // Actualizar un documento
+      await usersCollection.updateOne({ name: 'John' }, { $set: { age: 31 } });
+      console.log('Document updated');
+
+      // Eliminar un documento
+      await usersCollection.deleteOne({ name: 'John' });
+      console.log('Document deleted');
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      await client.close(); // Cerrar la conexión
+    }
+  };
+
+  run();
+  ```
+
+- 3. Usando ORM, Mongoose
+     Mongoose es una capa de abstracción sobre la biblioteca nativa de MongoDB. Simplifica la interacción al agregar:
+
+     Modelos y esquemas para estructurar tus datos.
+     Métodos para trabajar con la base de datos usando estos modelos.
+     Ejemplo básico con Mongoose:
+
+  ```js
+  import mongoose from 'mongoose';
+
+  const connectDB = async () => {
+    try {
+      await mongoose.connect('your_mongo_connection_string');
+      console.log('Connected to MongoDB');
+    } catch (error) {
+      console.error('Connection error:', error);
+    }
+  };
+
+  // Crear un esquema y modelo
+  const userSchema = new mongoose.Schema({
+    name: String,
+    age: Number,
+  });
+  const User = mongoose.model('User', userSchema);
+
+  const run = async () => {
+    try {
+      await connectDB();
+
+      // Insertar un documento
+      const user = new User({ name: 'John', age: 30 });
+      await user.save();
+      console.log('Inserted document:', user);
+
+      // Leer documentos
+      const users = await User.find();
+      console.log('Users:', users);
+
+      // Actualizar un documento
+      await User.updateOne({ name: 'John' }, { $set: { age: 31 } });
+      console.log('Document updated');
+
+      // Eliminar un documento
+      await User.deleteOne({ name: 'John' });
+      console.log('Document deleted');
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  run();
+  ```

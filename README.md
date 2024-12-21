@@ -191,6 +191,8 @@
 
   -¿Qué contiene típicamente lib? Funciones de utilidad (helpers).Módulos personalizados o adaptaciones de librerías externas. Clases u objetos relacionados con la lógica del negocio o Infraestructura.
 
+  - CONEXION A LA BASE DE DATOS
+
   ```js
   import mongoose from 'mongoose';
   export const connectDB = async () => {
@@ -288,7 +290,19 @@
 
   - el hasheo es similar al punto 21: [cursoNode](https://github.com/kennethdevpc/projectNodeBR/blob/master/pasos2024.txt#L2334)
 
-    - en MySql es diferencte la creacion :
+    - en MySql es diferencte la creacion con ORM "Mongoose" :
+
+      - #### Usando Mongoose
+
+        -informacion de queryes y operadores:
+
+        - [operator](https://www.mongodb.com/docs/manual/reference/operator/query-comparison/)
+        - [CRUD MOngose](https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/)
+        - [mongo con Node ](https://www.mongodb.com/docs/drivers/node/current/)
+        - ObjetoReq.md
+
+        - Mongoose es una capa de abstracción sobre la biblioteca nativa de MongoDB. Simplifica la interacción al agregar: Modelos y esquemas para estructurar tus datos. Métodos para trabajar con la base de datos usando estos modelos.
+        - **MongoDB:** : la biblioteca oficial que interactúa directamente con MongoDB. Aquí tú mismo gestionas todas las operaciones (e.g., conexión, creación de documentos, consultas) sin un nivel adicional de abstracción.
 
     ```js
     const usuario = await Usuario.create({
@@ -585,6 +599,87 @@
       }
     };
     ```
+
+- # Mongodb:
+
+  - [Query-document/](https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/query-document/)
+
+- # 15) creacion del message
+
+  - ## 15.1) creo el MODELO
+
+    - #### u: `backend/src/models/message.model.js`
+
+    ```js
+    import mongoose from 'mongoose';
+
+    const messageSchema = new mongoose.Schema(
+      {
+        senderId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+        receiverId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+        text: {
+          type: String,
+        },
+        image: {
+          type: String,
+        },
+      },
+      { timestamps: true }
+    );
+
+    const Message = mongoose.model('Message', messageSchema);
+
+    export default Message;
+    ```
+
+  - ## 15.2) creo la ruta en el index y luego en las rutas. `backend/src/index.js`
+
+    ```js
+    .....
+    import messageRoutes from './routes/messageRoutes.route.js'; //----importo las rutas para mensajes
+    .....
+    app.use('/api/auth', authRoutes);
+    app.use('/api/auth', messageRoutes); //---------uso la ruta de mensajes
+    ```
+
+    - ### 15.2.1) messageRoutes.route.js `backend/src/routes/messageRoutes.route.js`
+
+      ```js
+      import express from 'express';
+      import { protectRoute } from '../middleware/auth.middleware.js';
+      import {
+        getMessages,
+        getUsersForSidebar,
+        sendMessage,
+      } from '../controllers/message.controller.js';
+
+      const router = express.Router();
+
+      router.get('/users', protectRoute, getUsersForSidebar);
+      router.get('/:id', protectRoute, getMessages);
+
+      router.post('/send/:id', protectRoute, sendMessage);
+
+      export default router;
+      ```
+
+  - ## 15.3) creo el controlador para `getMessages, getUsersForSidebar, sendMessage`
+
+    - #### u: `backend/src/controllers/message.controller.js`
+
+    -
+
+  ```
+
+  ```
 
 ```
 
