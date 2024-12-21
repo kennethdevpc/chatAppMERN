@@ -2,7 +2,7 @@ import User from '../models/user.model.js';
 import Message from '../models/message.model.js';
 
 import cloudinary from '../lib/cloudinary.js';
-import { getReceiverSocketId, io } from '../lib/socket.js';
+// import { getReceiverSocketId, io } from '../lib/socket.js';
 
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -19,13 +19,14 @@ export const getUsersForSidebar = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
-    const { id: userToChatId } = req.params;
-    const myId = req.user._id;
+    //----destructuring del ID, pero le a un nombre userToChatId
+    const { id: userToChatId } = req.params; //----request por params
+    const myId = req.user._id; //----request por user que esta logueado, se crea cuando se loguea, en el middleware "protectRoute"
 
     const messages = await Message.find({
       $or: [
-        { senderId: myId, receiverId: userToChatId },
-        { senderId: userToChatId, receiverId: myId },
+        { senderId: myId, receiverId: userToChatId }, //--mensajes si soy yo el remitente y el destinatario
+        { senderId: userToChatId, receiverId: myId }, //--mensajes si soy yo el destinatario y el remitente
       ],
     });
 
@@ -57,11 +58,11 @@ export const sendMessage = async (req, res) => {
     });
 
     await newMessage.save();
-
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit('newMessage', newMessage);
-    }
+    //----real time functionality se trabaja despues
+    // const receiverSocketId = getReceiverSocketId(receiverId);
+    // if (receiverSocketId) {
+    //   io.to(receiverSocketId).emit('newMessage', newMessage);
+    // }
 
     res.status(201).json(newMessage);
   } catch (error) {

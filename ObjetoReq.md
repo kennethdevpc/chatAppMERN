@@ -168,7 +168,11 @@ app.listen(3000, () => {
 });
 ```
 
-# teoria mongodb:
+- # 2) teoria mongodb:
+
+  - [operator](https://www.mongodb.com/docs/manual/reference/operator/query-comparison/)
+  - [CRUD MOngose](https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/)
+  - [mongo con Node ](https://www.mongodb.com/docs/drivers/node/current/)
 
 - 1. Conceptos Básicos de MongoDB:
 
@@ -408,3 +412,167 @@ app.listen(3000, () => {
 
   run();
   ```
+
+  - ## 2) otros conceptos mongo:
+
+1.  Operaciones CRUD y funcionalidades clave en Mongoose
+
+        - C - Create (Crear documentos):
+          Cuando creas documentos en MongoDB, puedes usar métodos como:
+
+        - .create(): Crea un nuevo documento.
+
+          ```javascript
+          Copiar código
+          const newUser = await User.create({ name: 'Juan', email: 'juan@example.com' });
+          ```
+
+          - Instancias de modelos y .save(): Más control al crear.
+
+          ```javascript
+          Copiar código
+          const user = new User({ name: 'Ana', email: 'ana@example.com' });
+          await user.save();
+          ```
+
+          - Conceptos clave para saber:
+
+          - Validaciones: Puedes definir validaciones en el esquema (por - ejemplo, campos requeridos, valores únicos).
+
+          ```javascript
+          const userSchema = new mongoose.Schema({
+            email: { type: String, required: true, unique: true },
+            age: { type: Number, min: 18 },
+          });
+          ```
+
+          - Middleware pre-save: Ejecuta lógica antes de guardar.
+
+          ```javascript
+          Copiar código
+          userSchema.pre('save', function(next) {
+          this.createdAt = Date.now();
+          next();
+          });
+          ```
+
+        - Read (Leer documentos):
+          Además de `.find() y .select()`, hay otras características interesantes: - Filtros avanzados: Usar operadores de MongoDB.
+
+          ```javascript
+          User.find({ age: { $gt: 18, $lt: 30 } }); // Edad entre 18 y 30
+          ```
+
+          - Proyecciones: Además de .select(), puedes definir qué mostrar en la propia consulta.
+
+          ```javascript
+          User.find({}, { name: 1, email: 1 }); // Similar a .select('name email')
+          ```
+
+          Métodos de paginación:
+          `.skip() y .limit():`
+
+          ```javascript
+          Copiar código
+          User.find().skip(10).limit(5); // Saltar 10 resultados, mostrar los siguientes 5
+          ```
+
+    - Conceptos clave:
+
+      - Paginación: Útil para resultados grandes.
+      - Indices: Aceleran búsquedas en campos específicos.
+
+      - Update (Actualizar documentos): - Actualizar datos tiene diferentes métodos: - .updateOne(): Modifica el primer documento que coincide.
+        ```javascript
+        Copiar código
+        User.updateOne({ name: 'Juan' }, { $set: { age: 25 } });
+        ```
+      - .updateMany(): Modifica todos los documentos que coinciden.
+
+      ```javascript
+      Copiar código
+      User.updateMany({ active: false }, { $set: { active: true } });
+      ```
+
+      - .findByIdAndUpdate(): Encuentra por ID y actualiza.
+
+        ```javascript
+        Copiar código
+        User.findByIdAndUpdate(id, { $set: { name: 'New Name' } }, { new: true });
+        ```
+
+      - Conceptos clave:
+
+        - Opciones como { new: true }: Devuelve el documento actualizado en lugar del original.
+        - Middleware pre y post: Ejecutar lógica antes o después de actualizar.
+        - Actualizaciones incrementales:
+          ```javascript
+          Copiar código
+          User.updateOne({ \_id: id }, { $inc: { age: 1 } }); // Incrementar edad en 1
+          ```
+
+    - D - Delete (Eliminar documentos):
+
+      - .deleteOne(): Elimina un documento.
+        ```javascript
+        Copiar código
+        User.deleteOne({ name: 'Juan' });
+        ```
+      - .deleteMany(): Elimina varios documentos.
+        ```javascript
+        Copiar código
+        User.deleteMany({ active: false });
+        ```
+      - .findByIdAndDelete(): Encuentra y elimina por ID.
+
+        ```javascript
+        Copiar código
+        User.findByIdAndDelete(id);
+        ```
+
+        Conceptos clave:
+
+        Cuidado con eliminar datos sensibles: Asegúrate de usar filtros específicos para evitar eliminar documentos de más.
+        Soft Deletes: En lugar de eliminar datos, podrías marcar documentos como inactivos.
+
+- ## 3) Otros conceptos importantes
+
+  - Populate (Relaciones entre documentos):
+    Si tienes relaciones entre colecciones, populate te permite incluir datos relacionados:
+    Ejemplo: Un usuario tiene un campo posts con referencias a otra colección:
+    ```javascript
+    Copiar código
+    const user = await User.findById(userId).populate('posts');
+    ```
+  - Middleware en Mongoose:
+    Mongoose permite ejecutar funciones antes o después de ciertas acciones:
+    `pre y post:`
+
+    ```js
+    userSchema.pre('save', function (next) {
+      console.log('A document is about to be saved!');
+      next();
+    });
+    ```
+
+  - Plugins:
+    Puedes añadir funcionalidades globales a los esquemas usando plugins.
+
+    - Ejemplo: Un plugin para agregar timestamps automáticamente.
+
+      ```javascript
+      Copiar código
+      const mongooseTimestamp = require('mongoose-timestamp');
+      schema.plugin(mongooseTimestamp);
+      ```
+
+    - Virtuals:
+      Campos calculados que no se guardan en la base de datos.
+
+      - Ejemplo: Nombre completo:
+
+      ```javascript
+      userSchema.virtual('fullName').get(function () {
+        return `${this.firstName} ${this.lastName}`;
+      });
+      ```

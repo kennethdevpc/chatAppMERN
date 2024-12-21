@@ -299,7 +299,7 @@
         - [operator](https://www.mongodb.com/docs/manual/reference/operator/query-comparison/)
         - [CRUD MOngose](https://www.mongodb.com/docs/drivers/node/current/fundamentals/crud/)
         - [mongo con Node ](https://www.mongodb.com/docs/drivers/node/current/)
-        - ObjetoReq.md
+        - [mas info] (https://github.com/kennethdevpc/chatAppMERN/blob/main/ObjetoReq.md)
 
         - Mongoose es una capa de abstracción sobre la biblioteca nativa de MongoDB. Simplifica la interacción al agregar: Modelos y esquemas para estructurar tus datos. Métodos para trabajar con la base de datos usando estos modelos.
         - **MongoDB:** : la biblioteca oficial que interactúa directamente con MongoDB. Aquí tú mismo gestionas todas las operaciones (e.g., conexión, creación de documentos, consultas) sin un nivel adicional de abstracción.
@@ -675,7 +675,88 @@
 
     - #### u: `backend/src/controllers/message.controller.js`
 
-    -
+    - ## 15.3.1) getUsersForSidebar **toma todo los usuarios y los muestra en el sidebar**
+
+      - ruta: `router.get('/users', protectRoute, getUsersForSidebar);`
+
+      ```js
+      export const getUsersForSidebar = async (req, res) => {
+        try {
+          const loggedInUserId = req.user._id;
+          //---Busca todos los usuarios cuyo ID (_id) no sea igual ($ne) al ID del usuario actualmente autenticado (loggedInUserId)."
+          const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select(
+            '-password'
+          ); //Indica que los resultados devueltos No deben incluir (-) el campo password de los usuarios
+
+          res.status(200).json(filteredUsers);
+        } catch (error) {
+          console.error('Error in getUsersForSidebar: ', error.message);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      };
+      ```
+
+    - ## 15.3.2) **toma el 1 usuario del chat sidebar y prosede a mostrar ese chat**
+
+      - ruta: `router.get('/:id', protectRoute, getMessages);`
+
+      ```js
+      export const getMessages = async (req, res) => {
+        try {
+          //----destructuring del ID, pero le a un nombre userToChatId
+          const { id: userToChatId } = req.params; //----request por params
+          const myId = req.user._id; //----request por user que esta logueado, se crea cuando se loguea, en el middleware "protectRoute"
+
+          const messages = await Message.find({
+            $or: [
+              { senderId: myId, receiverId: userToChatId }, //--mensajes si soy yo el remitente y el destinatario
+              { senderId: userToChatId, receiverId: myId }, //--mensajes si soy yo el destinatario y el remitente
+            ],
+          });
+
+          res.status(200).json(messages);
+        } catch (error) {
+          console.log('Error in getMessages controller: ', error.message);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      };
+      ```
+
+    - ## 15.3.3) **envio de mensaje a un usuario del navbar**
+
+      - ruta: `router.post('/send/:id', protectRoute, sendMessage);`
+
+      ```js
+      export const sendMessage = async (req, res) => {
+        try {
+          const { text, image } = req.body;
+          const { id: receiverId } = req.params;
+          const senderId = req.user._id;
+
+          let imageUrl;
+          if (image) {
+            // Upload base64 image to cloudinary
+            const uploadResponse = await cloudinary.uploader.upload(image);
+            imageUrl = uploadResponse.secure_url;
+          }
+
+          const newMessage = new Message({
+            senderId,
+            receiverId,
+            text,
+            image: imageUrl,
+          });
+
+          await newMessage.save();
+          //----real time functionality se trabaja despues
+
+          res.status(201).json(newMessage);
+        } catch (error) {
+          console.log('Error in sendMessage controller: ', error.message);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      };
+      ```
 
   ```
 
