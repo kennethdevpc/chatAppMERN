@@ -110,6 +110,11 @@
     - #### u : `backend/src/controllers/auth.controller.js`
 
     ```js
+    import { generateToken } from '../lib/utils.js';
+    import User from '../models/user.model.js';
+    import bcrypt from 'bcrypt';
+    import cloudinary from '../lib/cloudinary.js';
+
     export const signup = async (req, res) => {
       const { fullName, email, password } = req.body;
     };
@@ -579,6 +584,8 @@
             return res.status(400).json({ message: 'Profile pic is required' });
           }
           const uploadResponse = await cloudinary.uploader.upload(profilePic);
+
+          //----actualizo el user, con la nueva profilePicture(profilePic)
           const updatedUser = await User.findByIdAndUpdate(
             userId,
             { profilePic: uploadResponse.secure_url },
@@ -1525,9 +1532,9 @@
       signup: (data: { fullName: string; email: string; password: string }) => Promise<void>;
       login: (data: { email: string; password: string }) => Promise<void>;
       logout: () => Promise<void>;
-      // updateProfile: (data: { name?: string; email?: string; password?: string }) => Promise<void>;
-      // connectSocket: () => void;
-      // disconnectSocket: () => void;
+       updateProfile: (data: { name?: string; email?: string; password?: string }) => Promise<void>;
+       connectSocket: () => void;
+       disconnectSocket: () => void;
     }
     export const useAuthStore = create<AuthStore>((set, get) => ({
       login: async (data) => {
@@ -1798,9 +1805,10 @@
 
   ![20avatarchange.png](images/20avatarchange.png)
 
-  - despues creo el en el store, el estado profile : `frontend/src/store/useAuthStore.ts`
+  - despues creo el en el store, el estado updateProfile : `frontend/src/store/useAuthStore.ts`
 
     ```jsx
+
     updateProfile: async (data) => {
         set({ isUpdatingProfile: true });
         try {
@@ -1821,3 +1829,26 @@
         }
       },
     ```
+
+- # 10) ERROR PUT `Payload Too Large`
+
+  - ![21errorpayload](images/21errorpayload.png)
+
+  ```console
+    http://localhost:5001/api/auth/update-profile
+    Estado
+    413
+    Payload Too Large
+  ```
+
+  - ## El error 413 Payload Too Large:
+
+    ocurre cuando el tamaño de la solicitud (en este caso, la imagen que estás enviando) excede el límite configurado en tu servidor. Esto sucede generalmente cuando el archivo que estás intentando enviar es demasiado grande para el servidor, ya sea que se esté enviando como un archivo en bruto o como una cadena Base64.
+
+  - **SOLUCION**:Aumentar el límite de carga en tu servidor (Node.js/Express)
+  - ir al backend: `backend/src/index.js`
+    aumentarle
+
+  ```js
+  app.use(express.json({ limit: '50mb' }));
+  ```

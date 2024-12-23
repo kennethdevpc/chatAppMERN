@@ -15,7 +15,6 @@ function App() {
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
-  console.log('el usuario es:', authUser);
   //---usando el loader para mostrar mientras se verifica la autenticacion
   if (isCheckingAuth && !authUser)
     return (
