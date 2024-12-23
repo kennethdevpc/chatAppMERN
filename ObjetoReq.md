@@ -576,3 +576,6 @@ app.listen(3000, () => {
         return `${this.firstName} ${this.lastName}`;
       });
       ```
+
+- # 4) curso de node best practices:
+  (node curse precatices)[https://github.com/goldbergyoni/nodebestpractices/blob/spanish-translation/README.spanish.md]

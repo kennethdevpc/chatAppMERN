@@ -1,5 +1,9 @@
 # chatAppMERN
 
+- estoy usando Sniped (es7)
+- vscode great icons
+- Tailwind CSS IntelliSense
+
 # BBACKEND
 
 <details>
@@ -762,38 +766,1058 @@
             };
             ```
 
-      </details>
+- # 16) configurar las cors para evitar que salga ese error:
 
-# FRONTEND
+  ![cors](images/14cors.png)
 
-   <details>
-        <summary style="font-weight: bold; text-decoration: underline; cursor: pointer;">💥 capitulo 2- Frontend💥</summary>
+  ```terminal
+  npm i cors
+  ```
 
-- # Boilerplate: Frontend
+  - #### u : `backend/src/index.js`
 
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-- #
-```
+  ```js
+  import cors from 'cors';
+  app.use(express.json());
+  app.use(cookieParser());
+  app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+  ```
 
 </details>
+
+- # FRONTEND
+
+    <!-- <details>
+        <summary style="font-weight: bold; text-decoration: underline; cursor: pointer;">💥 capitulo 2- Frontend💥</summary> -->
+
+- # Boilerplate: Frontend `frontend`
+
+- # 1) instalaciones adicionales
+
+  ```terminal
+  npm i react-router-dom react-hot-toast
+  ```
+
+  - `react-hot-toast:` para mostrar mensajes de error en el frontend, de una manera mas presentable
+
+  - `react-router-dom:` para manejar rutasdebo colocar el "toaster" en el app principal `App.js`
+
+  ```tsx
+
+  import { Toaster } from 'react-hot-toast';
+  function App() {
+    .......
+
+    return (
+      <div className="text-red-500">
+      <!-- ------asi se coloca el toaster para que se muestre en toda la app los errores -->
+        <Toaster />
+
+        <Navbar />
+        .......
+      </div>
+    );
+  }
+
+  export default App;
+  ```
+
+  - ## instalar tailwind
+
+  ```terminal
+  npm install -D tailwindcss postcss autoprefixer
+  npx tailwindcss init -p
+
+  ```
+
+  - ### configuracion tailwind `frontend/tailwind.config.js`
+    ```js
+    /** @type {import('tailwindcss').Config} */
+    export default {
+      content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+      theme: {
+        extend: {},
+      },
+      plugins: [],
+    };
+    ```
+    - ### `./src/index.css`
+      ```css
+      @tailwind base;
+      @tailwind components;
+      @tailwind utilities;
+      ```
+  - ## instalacion de daisy UI: (daisyui)[https://daisyui.com/docs/install/]
+
+    ```terminal
+    npm i -D daisyui@latest
+    ```
+
+  - ## instalacion de axios :
+
+    ```terminal
+     npm i axios
+    ```
+
+  - ## instalacion zustand: para manejar estados de estado
+
+    ```terminal
+     npm i zustand
+    ```
+
+    - ### configuracion tailwind `frontend/tailwind.config.js`
+
+    ```js
+    /** @type {import('tailwindcss').Config} */
+    import daisyui from 'daisyui'; //---> import the plugin de daisyui
+    export default {
+      content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+      theme: {
+        extend: {},
+      },
+      plugins: [daisyui], // add the plugin to the config
+    };
+    ```
+
+  - importaciones el "@":
+    se puede configurar el tsconfig.json para que me deje usar en las importaciones el "@"
+    ```json
+    {
+      "compilerOptions": {
+        "baseUrl": "./",
+        "paths": {
+          "@/*": ["./src/*"]
+        }
+      }
+    }
+    ```
+    - Esto me permite importar los componentes de la carpeta src sin tener que poner "./src/..."
+
+- # 1.1) configuracion de axios para poder hacer peticiones a la API
+
+  - se realiza una instancia con la url base de la API, para poder hacer peticiones a la API sin que se tenga que poner la url completa en cada peticion
+    **por ejemplo :** axiosInstance.get('/users'), o tmabien axiosInstance.post('/users', { name: 'John' }).
+
+  - ##### u: `frontend/src/lib/axios.ts`
+
+    ```ts
+    import axios from 'axios';
+
+    export const axiosInstance = axios.create({
+      baseURL: import.meta.env.MODE === 'development' ? 'http://localhost:5001/api' : '/api',
+      withCredentials: true,
+    });
+    ```
+
+- # 1.2) configuracion de loaders con lucide
+  ```terminal
+    npm i lucide-react
+  ```
+- # 1.3) configuracion eslint:
+
+  si esta trabajando con js, sile pone errores de tipado, valla al archivo: `frontend/.eslintrc.cjs`
+
+  ```cjs
+        rules: {
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+      "react/prop-types": "off",
+    },
+  }
+
+  ```
+
+- # 2) inicio del proyecto
+
+  - #### u: `frontend/src/main.tsx`
+
+    ```tsx
+    import React from 'react';
+    import ReactDOM from 'react-dom/client';
+    import App from './App.tsx';
+    import './index.css';
+    import { BrowserRouter } from 'react-router-dom'; //---envuelvo la app en el BrowserRouter, para que las rutas funcionen
+
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+      <React.StrictMode>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </React.StrictMode>
+    );
+    ```
+
+- # 3) configuracion de rutas
+
+  - #### `frontend/src/App.tsx`
+
+    ```tsx
+    import Navbar from './components/Navbar';
+    import { Routes, Route } from 'react-router-dom'; //---importo la funcionalidad de rutas
+    function App() {
+      return (
+        <div className="text-red-500">
+          <Navbar />
+          //--------aqui envuelvo las rutas, usando el Routes
+          <Routes>
+            <Route path="/" element={<h1>Home</h1>} />
+            <Route path="/about" element={<h1>About</h1>} />
+            <Route path="/contact" element={<h1>Contact</h1>} />
+          </Routes>
+        </div>
+      );
+    }
+
+    export default App;
+    ```
+
+- # 4) creo los compoentes de las rutas
+
+  `frontend/src/pages`
+  [HomePage](frontend/src/pages/HomePage.tsx) [LoginPage](frontend/src/pages/LoginPage.tsx) [ProfilePage](frontend/src/pages/ProfilePage.tsx) [SettingsPage](frontend/src/pages/SettingsPage.tsx) [SignUpPage]
+  (frontend/src/pages/SignUpPage.tsx)
+
+  - Agrego esos componentes a las rutas: `frontend/src/App.tsx`
+
+  ```tsx
+  import Navbar from './components/Navbar';
+  import { Routes, Route } from 'react-router-dom';
+  import HomePage from './pages/HomePage';
+  import SignUpPage from './pages/SignUpPage';
+  import LoginPage from './pages/LoginPage';
+  import SettingsPage from './pages/SettingsPage';
+  import ProfilePage from './pages/ProfilePage';
+  function App() {
+    return (
+      <div className="text-red-500">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Routes>
+      </div>
+    );
+  }
+
+  export default App;
+  ```
+
+- # 5) antes de seguir con cada ruta voy a configurar `zustand` para poder manejar el estado de la app
+
+  - ## teoira Zustand:
+    Qué Hace Cada Parte
+
+  1. create:
+     create es la función principal de Zustand para crear un `"store"`. Un "store" en este contexto es simplemente un lugar donde se guarda información que puede ser compartida entre componentes.
+
+  2. (set, get)
+     La función `(set, get)` que pasamos a create define dos herramientas clave:
+
+     **set:** Sirve para modificar el estado. Piensa en él como una forma de decirle a Zustand: "Oye, cambia este valor en el store".
+
+     **get:** Sirve para `consultar el estado actual dentro del store.` Es como una forma rápida de leer los datos directamente desde el store.
+
+     - Ejemplo básico para que quede claro:
+
+       - creo el store
+
+       ```tsx
+       import { create } from 'zustand';
+
+       export const useAuthStore = create((set, get) => ({
+         // Estado inicial
+         authUser: null,
+         isCheckingAuth: true,
+         // Acción para modificar el estado
+         login: (user) => set({ authUser: user, isCheckingAuth: false }),
+         logout: () => set({ authUser: null, isCheckingAuth: false }),
+         // Usar get para obtener un valor actual del estado
+         isUserLoggedIn: () => !!get().authUser, // Retorna true si authUser no es null
+       }));
+       ```
+
+       - Uso el store en el componente:
+
+       ```tsx
+       import React from 'react';
+       import { useAuthStore } from './path-to-store';
+
+       const AuthStatus = () => {
+         const { authUser, isCheckingAuth, login, logout } = useAuthStore();
+
+         if (isCheckingAuth) {
+           return <div>Checking authentication...</div>;
+         }
+
+         return (
+           <div>
+             {authUser ? (
+               <>
+                 <p>Welcome, {authUser.name}!</p>
+                 <button onClick={logout}>Log Out</button>
+               </>
+             ) : (
+               <>
+                 <p>No user is logged in.</p>
+                 <button onClick={() => login({ name: 'John Doe' })}>Log In</button>
+               </>
+             )}
+           </div>
+         );
+       };
+
+       export default AuthStatus;
+       ```
+
+  - ## 5.1) - creo la carpeta `store` y dentro de ella creo los archivos para manejar el estado de la app
+
+  - ##### `frontend/src/store/useAuthStore.ts`
+
+    ```tsx
+    import { create } from 'zustand';
+    import { axiosInstance } from '../lib/axios.js';
+    interface AuthStore {
+      authUser: { _id: string; fullName: string; email: string } | null;
+      isSigningUp: boolean;
+      isLoggingIn: boolean;
+      isUpdatingProfile: boolean;
+      isCheckingAuth: boolean;
+    }
+
+    export const useAuthStore = create<AuthStore>((set, get) => ({
+      authUser: null,
+      isSigningUp: false,
+      isLoggingIn: false,
+      isUpdatingProfile: false,
+      isCheckingAuth: true,
+
+      checkAuth: async () => {
+        try {
+          //-----uso de axiosInstance para hacer peticiones al servidor, se usa asi porque ya se configuro el baseURL en el archivo axios.js
+          //----para meterle primero los datos de prueba es decir loguearse-------
+          //const a = { fullName: 'kenneth', email: 'ken@gmail.com', password: '1234567' };
+          //const res = await axiosInstance.post('/auth/login', a);
+          //console.log('usuario logueado:', res);
+          //-----para checar si estoy logueado y ver el usuario
+          const res: { data: { _id: string; fullName: string; email: string } } =
+            await axiosInstance.get('/auth/check');
+          console.log('datos usuario logueado:', res);
+          set({ authUser: res.data });
+        } catch (error) {
+          console.log('Error in checkAuth:', error);
+          set({ authUser: null });
+        } finally {
+          set({ isCheckingAuth: false });
+        }
+      },
+    }));
+    ```
+
+  - ## 5.2) uso del store en los componentes de la app por ejemplo para la prueba en app
+
+    - #### u : `frontend/src/App.tsx`
+
+      ```tsx
+      function App() {
+        const { authUser, checkAuth } = useAuthStore();
+        const prueba = async () => {
+          await checkAuth();
+        };
+        useEffect(() => {
+          checkAuth();
+        }, [checkAuth]);
+        console.log('el usuario es:', authUser);
+      ```
+
+  - ## 5.3) uso del Loader con lucide react, recuerda que se instalo en el punto 1.2)
+
+    - lo usamos en el compoenente `App.tsx`
+
+    ```tsx
+    ...
+    import { Loader } from 'lucide-react';
+
+    function App() {
+      const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+
+      useEffect(() => {
+        checkAuth();
+      }, [checkAuth]);
+      console.log('el usuario es:', authUser);
+      //---usando el loader para mostrar mientras se verifica la autenticacion
+      if (isCheckingAuth && !authUser)
+        return (
+          <div className="flex items-center justify-center h-screen">
+            <Loader className="size-10 animate-spin" />
+          </div>
+        );
+
+      return (
+        <div className="text-red-500">
+          ....
+        </div>
+      );
+    }
+
+    export default App;
+    ```
+
+- # 6) proteccion de las rutas con react-router-dom
+
+  - #### `frontend/src/App.tsx`
+
+            ```tsx
+
+            import { Routes, Route, Navigate } from 'react-router-dom';
+
+            function App() {
+            return (
+
+              <div className="text-red-500">
+                <Navbar />
+                <Routes>
+                    //------aqui envuelvo las rutas y por ejemplo las rutas de login al
+                    //------si no esta autenticado va a la pagina de login
+                     <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
+                    <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+                    <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
+
+                </Routes>
+              </div>
+            )        }
+            ```
+
+    Despues de conocerse lo anterior ahora s eprocede a formalizar los componentes de la app
+
+- # 7) componente `signup` : `frontend/src/pages/SignUpPage.tsx`
+
+  - primero creo el en el store, el estado signup: `frontend/src/store/useAuthStore.ts`
+
+    ```tsx
+    signup: async (data) => {
+      set({ isSigningUp: true });
+      try {
+        const res = await axiosInstance.post('/auth/signup', data);
+        console.log('res:', res);
+        set({ authUser: res.data });
+        toast.success('Account created successfully');
+        // get().connectSocket();
+      } catch (error) {
+        //  toast.error(error.response.data.message);
+        toast.error((error as Error).message);
+      } finally {
+        set({ isSigningUp: false });
+      }
+    },
+
+    ```
+
+  - luego en `frontend/src/pages/SignUpPage.tsx`
+
+    ```tsx
+    import { useState } from 'react';
+    import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare, User } from 'lucide-react';
+    import { Link } from 'react-router-dom';
+
+    import toast, { Toaster } from 'react-hot-toast';
+    import { useAuthStore } from '../store/useAuthStore';
+    import AuthImagePattern from '../components/AuthImagePattern';
+
+    const SignUpPage = () => {
+      const [showPassword, setShowPassword] = useState(false);
+      const [formData, setFormData] = useState({
+        fullName: '',
+        email: '',
+        password: '',
+      });
+
+      const { signup, isSigningUp } = useAuthStore();
+
+      const validateForm = () => {
+        if (!formData.fullName.trim()) return toast.error('Full name is required');
+        if (!formData.email.trim()) return toast.error('Email is required');
+        if (!/\S+@\S+\.\S+/.test(formData.email)) return toast.error('Invalid email format');
+        if (!formData.password) return toast.error('Password is required');
+        if (formData.password.length < 6)
+          return toast.error('Password must be at least 6 characters');
+
+        return true;
+      };
+
+      const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const success = validateForm();
+
+        if (success === true) signup(formData);
+      };
+
+      return (
+        <div className="min-h-screen grid lg:grid-cols-2">
+          <Toaster />
+          {/* left side */}
+          <div className="flex flex-col justify-center items-center p-6 sm:p-12">
+            <div className="w-full max-w-md space-y-8">
+              {/* LOGO */}
+              <div className="text-center mb-8">
+                <div className="flex flex-col items-center gap-2 group">
+                  <div
+                    className="size-12 rounded-xl bg-primary/10 flex items-center justify-center 
+                  group-hover:bg-primary/20 transition-colors"
+                  >
+                    <MessageSquare className="size-6 text-primary" />
+                  </div>
+                  <h1 className="text-2xl font-bold mt-2">Create Account</h1>
+                  <p className="text-base-content/60">Get started with your free account</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">Full Name</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="size-5 text-base-content/40" />
+                    </div>
+                    <input
+                      type="text"
+                      className={`input input-bordered w-full pl-10`}
+                      placeholder="John Doe"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">Email</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail className="size-5 text-base-content/40" />
+                    </div>
+                    <input
+                      type="email"
+                      className={`input input-bordered w-full pl-10`}
+                      placeholder="you@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">Password</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="size-5 text-base-content/40" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className={`input input-bordered w-full pl-10`}
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-5 text-base-content/40" />
+                      ) : (
+                        <Eye className="size-5 text-base-content/40" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary w-full" disabled={isSigningUp}>
+                  {isSigningUp ? (
+                    <>
+                      <Loader2 className="size-5 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
+                </button>
+              </form>
+
+              <div className="text-center">
+                <p className="text-base-content/60">
+                  Already have an account?{' '}
+                  <Link to="/login" className="link link-primary">
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* right side */}
+
+          <AuthImagePattern
+            title="Join our community"
+            subtitle="Connect with friends, share moments, and stay in touch with your loved ones."
+          />
+        </div>
+      );
+    };
+    export default SignUpPage;
+    ```
+
+  - ### 7.1) creo el componete `AuthImagePattern`: `frontend/src/components/AuthImagePattern.tsx`
+
+    - Es un componente que se creara para mostrar a la derecha los cuadritos
+
+    ```tsx
+    import React from 'react';
+
+    type Props = {
+      title: string;
+      subtitle: string;
+    };
+
+    function AuthImagePattern({ title, subtitle }: Props) {
+      return (
+        <div className="hidden lg:flex items-center justify-center bg-base-200 p-12">
+          <div className="max-w-md text-center">
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              {[...Array(9)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`aspect-square rounded-2xl bg-primary/10 ${
+                    i % 2 === 0 ? 'animate-pulse' : ''
+                  }`}
+                />
+              ))}
+            </div>
+            <h2 className="text-2xl font-bold mb-4">{title}</h2>
+            <p className="text-base-content/60">{subtitle}</p>
+          </div>
+        </div>
+      );
+    }
+
+    export default AuthImagePattern;
+    ```
+
+  - ### 7.2 si voy al fomrulario y lleno me debe de mandar a
+
+    la ruta: `homepage`, ya que se ajusto en `frontend/src/App.tsx`
+
+    ```tsx
+    <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+    ```
+
+    - ademas en las cookies debe aparecer el token de "jwt"
+
+    ![imagen15](images/15signup.png)
+
+- # 8) componente `logout`
+
+  - primero creo el en el store, el estado logout: `frontend/src/store/useAuthStore.ts`
+
+    ```tsx
+        logout: async () => {
+        try {
+          await axiosInstance.post('/auth/logout');
+          set({ authUser: null });
+          toast.success('Logged out successfully');
+          // get().disconnectSocket();
+        } catch (error) {
+          toast.error((error as Error).message);
+          // toast.error(error.response.data.message);
+        }
+      },
+    ```
+
+  - luego en `frontend/src/components/Navbar.tsx`
+
+  ```tsx
+  import { Link } from 'react-router-dom';
+  import { useAuthStore } from '../store/useAuthStore';
+  import { LogOut, MessageSquare, Settings, User } from 'lucide-react';
+
+  const Navbar = () => {
+    const { logout, authUser } = useAuthStore();
+
+    return (
+      <header
+        className="bg-base-100 border-b border-base-300 fixed w-full top-0 z-40 
+        backdrop-blur-lg bg-base-100/80"
+      >
+        <div className="container mx-auto px-4 h-16">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex items-center gap-8">
+              <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-all">
+                <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-primary" />
+                </div>
+                <h1 className="text-lg font-bold">Chatty</h1>
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                to={'/settings'}
+                className={`
+                  btn btn-sm gap-2 transition-colors
+                  
+                  `}
+              >
+                <Settings className="w-4 h-4" />
+                <span className="hidden sm:inline">Settings</span>
+              </Link>
+
+              {authUser && (
+                <>
+                  <Link to={'/profile'} className={`btn btn-sm gap-2`}>
+                    <User className="size-5" />
+                    <span className="hidden sm:inline">Profile</span>
+                  </Link>
+
+                  <button className="flex gap-2 items-center" onClick={logout}>
+                    <LogOut className="size-5" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  };
+  export default Navbar;
+  ```
+
+  ![16LoginNavbar](images/16LoginNavbar.png)
+
+- # 8) componente `login`
+
+  - primero creo el en el store, el estado logout: `frontend/src/store/useAuthStore.ts`
+
+    ```jsx
+    interface AuthStore {
+      authUser: { _id: string; fullName: string; email: string } | null;
+      isSigningUp: boolean;
+      isLoggingIn: boolean;
+      isUpdatingProfile: boolean;
+      isCheckingAuth: boolean;
+      onlineUsers: string[];
+      socket: ReturnType<typeof io> | null;
+      checkAuth: () => Promise<void>;
+      signup: (data: { fullName: string; email: string; password: string }) => Promise<void>;
+      login: (data: { email: string; password: string }) => Promise<void>;
+      logout: () => Promise<void>;
+      // updateProfile: (data: { name?: string; email?: string; password?: string }) => Promise<void>;
+      // connectSocket: () => void;
+      // disconnectSocket: () => void;
+    }
+    export const useAuthStore = create<AuthStore>((set, get) => ({
+      login: async (data) => {
+        set({ isLoggingIn: true });
+        try {
+          const res = await axiosInstance.post('/auth/login', data);
+          set({ authUser: res.data });
+          toast.success('Logged in successfully');
+
+          // get().connectSocket();
+        } catch (error) {
+          // toast.error(error.response.data.message);
+          toast.error((error as Error).message);
+        } finally {
+          set({ isLoggingIn: false });
+        }
+      },
+    }));
+
+    ```
+
+  - luego en `frontend/src/pages/LoginPage.tsx`
+
+    ```jsx
+    import { useState } from 'react';
+    import { useAuthStore } from '../store/useAuthStore';
+    import AuthImagePattern from '../components/AuthImagePattern';
+    import { Link } from 'react-router-dom';
+    import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from 'lucide-react';
+
+    const LoginPage = () => {
+      const [showPassword, setShowPassword] = useState(false);
+      const [formData, setFormData] = useState({
+        email: '',
+        password: '',
+      });
+      const { login, isLoggingIn } = useAuthStore();
+
+      const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        login(formData);
+      };
+
+      return (
+        <div className="h-screen grid lg:grid-cols-2">
+          {/* Left Side - Form */}
+          <div className="flex flex-col justify-center items-center p-6 sm:p-12">
+            <div className="w-full max-w-md space-y-8">
+              {/* Logo */}
+              <div className="text-center mb-8">
+                <div className="flex flex-col items-center gap-2 group">
+                  <div
+                    className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20
+                  transition-colors"
+                  >
+                    <MessageSquare className="w-6 h-6 text-primary" />
+                  </div>
+                  <h1 className="text-2xl font-bold mt-2">Welcome Back</h1>
+                  <p className="text-base-content/60">Sign in to your account</p>
+                </div>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">Email</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-base-content/40" />
+                    </div>
+                    <input
+                      type="email"
+                      className={`input input-bordered w-full pl-10`}
+                      placeholder="you@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-medium">Password</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-base-content/40" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className={`input input-bordered w-full pl-10`}
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5 text-base-content/40" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-base-content/40" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary w-full" disabled={isLoggingIn}>
+                  {isLoggingIn ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Sign in'
+                  )}
+                </button>
+              </form>
+
+              <div className="text-center">
+                <p className="text-base-content/60">
+                  Don&apos;t have an account?{' '}
+                  <Link to="/signup" className="link link-primary">
+                    Create account
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Image/Pattern */}
+          <AuthImagePattern
+            title={'Welcome back!'}
+            subtitle={'Sign in to continue your conversations and catch up with your messages.'}
+          />
+        </div>
+      );
+    };
+    export default LoginPage;
+    ```
+
+    ![17loginpage](images/17loginpage.png)
+
+- # 9) componente `profile`
+
+  - debo colocar la imagen avaar para el su uso en el "ProfilePage"
+
+    - #### u : `frontend/public/avatar.png`
+      ![images/19avatar.png](images/19avatar.png)
+
+  - En esta ocasion primero creo el en el componente `ProfilePage` : `frontend/src/pages/ProfilePage.tsx`
+
+    ```jsx
+    import { useState } from 'react';
+    import { useAuthStore } from '../store/useAuthStore';
+    import { Camera, Mail, User } from 'lucide-react';
+
+    const ProfilePage = () => {
+      const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
+      const [selectedImg, setSelectedImg] = useState<null | string>(null);
+
+      const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        console.log(file);
+
+        const reader = new FileReader();
+
+        reader.readAsDataURL(file);
+
+        reader.onload = async () => {
+          const base64Image = reader.result as string;
+          setSelectedImg(base64Image);
+          await updateProfile({ profilePic: base64Image });
+        };
+      };
+
+      return (
+        <div className="h-screen pt-20">
+          <div className="max-w-2xl mx-auto p-4 py-8">
+            <div className="bg-base-300 rounded-xl p-6 space-y-8">
+              <div className="text-center">
+                <h1 className="text-2xl font-semibold ">Profile</h1>
+                <p className="mt-2">Your profile information</p>
+              </div>
+
+              {/* avatar upload section */}
+
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <img
+                    src={selectedImg || authUser?.profilePic || '/avatar.png'}
+                    alt="Profile"
+                    className="size-32 rounded-full object-cover border-4 "
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    className={`
+                      absolute bottom-0 right-0
+                      bg-base-content hover:scale-105
+                      p-2 rounded-full cursor-pointer
+                      transition-all duration-200
+                      ${isUpdatingProfile ? 'animate-pulse pointer-events-none' : ''}
+                    `}
+                  >
+                    <Camera className="w-5 h-5 text-base-200" />
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={isUpdatingProfile}
+                    />
+                  </label>
+                </div>
+                <p className="text-sm text-zinc-400">
+                  {isUpdatingProfile ? 'Uploading...' : 'Click the camera icon to update your photo'}
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-1.5">
+                  <div className="text-sm text-zinc-400 flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Full Name
+                  </div>
+                  <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.fullName}</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="text-sm text-zinc-400 flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email Address
+                  </div>
+                  <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.email}</p>
+                </div>
+              </div>
+
+              <div className="mt-6 bg-base-300 rounded-xl p-6">
+                <h2 className="text-lg font-medium  mb-4">Account Information</h2>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between py-2 border-b border-zinc-700">
+                    <span>Member Since</span>
+                    <span>{authUser?.createdAt?.split('T')[0]}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span>Account Status</span>
+                    <span className="text-green-500">Active</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+    export default ProfilePage;
+
+
+    ```
+
+  hasta qui se podria poner un nuevo avatar en el perfil aun no se guardaria en la base de datos, ni en cloudary, pero si se podria ver en el perfil
+
+  ![20avatarchange.png](images/20avatarchange.png)
+
+  - despues creo el en el store, el estado profile : `frontend/src/store/useAuthStore.ts`
+
+    ```jsx
+    updateProfile: async (data) => {
+        set({ isUpdatingProfile: true });
+        try {
+          const res = await axiosInstance.put('/auth/update-profile', data);
+          set({ authUser: res.data });
+          toast.success('Profile updated successfully');
+        } catch (error) {
+          console.log('error in update profile:', error);
+          // toast.error(error.response.data.message);
+          // toast.error((error as Error).message);
+          if (error instanceof Error && 'errors' in error) {
+            console.log('Invalid data', error.message);
+          } else {
+            console.log('unknowlage error', error);
+          }
+        } finally {
+          set({ isUpdatingProfile: false });
+        }
+      },
+    ```
