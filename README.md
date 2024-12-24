@@ -662,6 +662,7 @@
       import messageRoutes from './routes/messageRoutes.route.js'; //----importo las rutas para mensajes
       .....
       app.use('/api/auth', authRoutes);
+
       app.use('/api/auth', messageRoutes); //---------uso la ruta de mensajes
       ```
 
@@ -1851,4 +1852,701 @@
 
   ```js
   app.use(express.json({ limit: '50mb' }));
+  ```
+
+- # 11) configuracion de theme con daisyui:
+
+  - en la pagina se encuentra la configuracion: `https://daisyui.com/docs/themes/`
+  - me dirijo a : `frontend/tailwind.config.js`
+
+  ```js
+  module.exports = {
+    //...
+    daisyui: {
+      themes: ['light', 'dark', 'cupcake'],
+    },
+  };
+  ```
+
+  - si voy al APP: `frontend/src/App.tsx`
+
+  ```tsx
+  return (
+    <div className="text-red-500" data-theme="cupcake"> //---aqui se cambia el tema
+      <Toaster />
+
+  )
+  ```
+
+  me aparece la pagina de esta manera:
+  ![22theme](images/22theme.png)
+
+  - ## 11.2) configuracion de cambio de theme
+
+    Para poder tener la opcion de cambiar de thema:
+
+    - ### 11.2.1) creo la constante: `frontend/src/constants/index.ts`
+
+    ```ts
+    export const THEMES = [
+      'light',
+      'dark',
+      'cupcake',
+      'bumblebee',
+      'emerald',
+      'corporate',
+      'synthwave',
+      'retro',
+      'cyberpunk',
+      'valentine',
+      'halloween',
+      'garden',
+      'forest',
+      'aqua',
+      'lofi',
+      'pastel',
+      'fantasy',
+      'wireframe',
+      'black',
+      'luxury',
+      'dracula',
+      'cmyk',
+      'autumn',
+      'business',
+      'acid',
+      'lemonade',
+      'night',
+      'coffee',
+      'winter',
+      'dim',
+      'nord',
+      'sunset',
+    ];
+    ```
+
+    - ### 11.2.2) creo el store: `frontend/src/store/useThemeStore.ts`
+
+    ```tsx
+    import { create } from 'zustand';
+    type ThemeStore = {
+      theme: string;
+      setTheme: (theme: string) => void;
+    };
+    export const useThemeStore = create<ThemeStore>((set) => ({
+      theme: localStorage.getItem('chat-theme') || 'coffee',
+      setTheme: (theme: string) => {
+        localStorage.setItem('chat-theme', theme);
+        set({ theme });
+      },
+    }));
+    ```
+
+    - ### 11.2.3) uso en el componente App `frontend/src/App.tsx`
+
+    ```tsx
+    import Navbar from './components/Navbar';
+    import { Routes, Route, Navigate } from 'react-router-dom';
+    import HomePage from './pages/HomePage';
+    import SignUpPage from './pages/SignUpPage';
+    import LoginPage from './pages/LoginPage';
+    import SettingsPage from './pages/SettingsPage';
+    import ProfilePage from './pages/ProfilePage';
+    import { useAuthStore } from './store/useAuthStore';
+    import { useEffect } from 'react';
+    import { Loader } from 'lucide-react';
+    import { Toaster } from 'react-hot-toast';
+    import { useThemeStore } from './store/useThemeStore';
+    function App() {
+      const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+      const { theme } = useThemeStore();
+    ....
+
+      return (
+        <div className="text-red-500" data-theme={theme}>
+
+
+        </div>
+      );
+    }
+
+    export default App;
+
+    ```
+
+    - ### 11.2.4) creo el componentedonde configuro el thema: `frontend/src/pages/SettingsPage.tsx`
+
+    ```tsx
+    import { THEMES } from '../constants';
+    import { useThemeStore } from '../store/useThemeStore';
+    import { Send } from 'lucide-react';
+
+    const PREVIEW_MESSAGES = [
+      { id: 1, content: "Hey! How's it going?", isSent: false },
+      { id: 2, content: "I'm doing great! Just working on some new features.", isSent: true },
+    ];
+
+    const SettingsPage = () => {
+      const { theme, setTheme } = useThemeStore();
+
+      return (
+        <div className="h-screen container mx-auto px-4 pt-20 max-w-5xl">
+          <div className="space-y-6">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-lg font-semibold">Theme</h2>
+              <p className="text-sm text-base-content/70">Choose a theme for your chat interface</p>
+            </div>
+
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {THEMES.map((t) => (
+                <button
+                  key={t}
+                  className={`
+                    group flex flex-col items-center gap-1.5 p-2 rounded-lg transition-colors
+                    ${theme === t ? 'bg-base-200' : 'hover:bg-base-200/50'}
+                  `}
+                  onClick={() => setTheme(t)}
+                >
+                  <div className="relative h-8 w-full rounded-md overflow-hidden" data-theme={t}>
+                    <div className="absolute inset-0 grid grid-cols-4 gap-px p-1">
+                      <div className="rounded bg-primary"></div>
+                      <div className="rounded bg-secondary"></div>
+                      <div className="rounded bg-accent"></div>
+                      <div className="rounded bg-neutral"></div>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-medium truncate w-full text-center">
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Preview Section */}
+            <h3 className="text-lg font-semibold mb-3">Preview</h3>
+            <div className="rounded-xl border border-base-300 overflow-hidden bg-base-100 shadow-lg">
+              <div className="p-4 bg-base-200">
+                <div className="max-w-lg mx-auto">
+                  {/* Mock Chat UI */}
+                  <div className="bg-base-100 rounded-xl shadow-sm overflow-hidden">
+                    {/* Chat Header */}
+                    <div className="px-4 py-3 border-b border-base-300 bg-base-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content font-medium">
+                          J
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-sm">John Doe</h3>
+                          <p className="text-xs text-base-content/70">Online</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chat Messages */}
+                    <div className="p-4 space-y-4 min-h-[200px] max-h-[200px] overflow-y-auto bg-base-100">
+                      {PREVIEW_MESSAGES.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex ${message.isSent ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`
+                              max-w-[80%] rounded-xl p-3 shadow-sm
+                              ${message.isSent ? 'bg-primary text-primary-content' : 'bg-base-200'}
+                            `}
+                          >
+                            <p className="text-sm">{message.content}</p>
+                            <p
+                              className={`
+                                text-[10px] mt-1.5
+                                ${
+                                  message.isSent
+                                    ? 'text-primary-content/70'
+                                    : 'text-base-content/70'
+                                }
+                              `}
+                            >
+                              12:00 PM
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Chat Input */}
+                    <div className="p-4 border-t border-base-300 bg-base-100">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          className="input input-bordered flex-1 text-sm h-10"
+                          placeholder="Type a message..."
+                          value="This is a preview"
+                          readOnly
+                        />
+                        <button className="btn btn-primary h-10 min-h-0">
+                          <Send size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+    export default SettingsPage;
+    ```
+
+- # 12) configuracion de HomePage:
+
+  - ## 12.1) creo el store de la app `frontend/src/store/useChatStore.ts`
+
+    ```jsx
+    import { create } from 'zustand';
+    import toast from 'react-hot-toast';
+    import { axiosInstance } from '../lib/axios';
+    import { useAuthStore } from './useAuthStore';
+    type Message = {
+      senderId: string;
+      receiverId: string;
+      text: string;
+      image: string;
+      createdAt: string;
+      _id: string;
+    };
+
+    type User = {
+      _id: string;
+      fullName: string;
+      email: string;
+      profilePic: string;
+      createdAt: string;
+    };
+    type ChatStore = {
+      messages: string[];
+      users: User[];
+      selectedUser: null | User;
+      isUsersLoading: boolean;
+      isMessagesLoading: boolean;
+      getUsers: () => Promise<void>;
+      getMessages: (userId: string) => Promise<void>;
+      sendMessage: (messageData: string) => Promise<void>;
+      subscribeToMessages: () => void;
+      unsubscribeFromMessages: () => void;
+      setSelectedUser: (selectedUser: User) => void;
+    };
+
+    export const useChatStore = create<ChatStore>((set, get) => ({
+      messages: [],
+      users: [],
+      selectedUser: null,
+      isUsersLoading: false, //--es el loading, aqui se carga un skeleton
+      isMessagesLoading: false, //--es el loading, aqui se carga un skeleton
+
+      getUsers: async () => {
+        set({ isUsersLoading: true });
+        try {
+          const res = await axiosInstance.get('/messages/users');
+          set({ users: res.data });
+        } catch (error) {
+          // toast.error(error.response.data.message);
+          toast.error((error as Error).message);
+        } finally {
+          set({ isUsersLoading: false });
+        }
+      },
+
+      getMessages: async (userId: string) => {
+        set({ isMessagesLoading: true });
+        try {
+          const res = await axiosInstance.get(`/messages/${userId}`);
+          set({ messages: res.data });
+        } catch (error) {
+          // toast.error(error.response.data.message);
+          toast.error((error as Error).message);
+        } finally {
+          set({ isMessagesLoading: false });
+        }
+      },
+      sendMessage: async (messageData: string) => {
+        const { selectedUser, messages } = get();
+        try {
+          const res = await axiosInstance.post(`/messages/send/${selectedUser?._id}`, messageData);
+          set({ messages: [...messages, res.data] });
+        } catch (error) {
+          // toast.error(error.response.data.message);
+          toast.error((error as Error).message);
+        }
+      },
+
+      subscribeToMessages: () => {
+        const { selectedUser } = get();
+        if (!selectedUser) return;
+
+        // const socket = useAuthStore.getState().socket;
+
+        // socket.on('newMessage', (newMessage) => {
+        //   const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+        //   if (!isMessageSentFromSelectedUser) return;
+
+        //   set({
+        //     messages: [...get().messages, newMessage],
+        //   });
+        // });
+      },
+
+      unsubscribeFromMessages: () => {
+        const socket = useAuthStore.getState().socket;
+        socket.off('newMessage');
+      },
+
+      setSelectedUser: (selectedUser) => set({ selectedUser }),
+    }));
+
+    ```
+
+  - ## 12.2) creo el componente `frontend/src/pages/HomePage.tsx`
+
+    ```jsx
+    import { useChatStore } from '../store/useChatStore';
+
+    import Sidebar from '../components/Sidebar';
+    import NoChatSelected from '../components/NoChatSelected';
+    import ChatContainer from '../components/ChatContainer';
+
+    const HomePage = () => {
+      const { selectedUser } = useChatStore();
+
+      return (
+        <div className="h-screen bg-base-200">
+          <div className="flex items-center justify-center pt-20 px-4">
+            <div className="bg-base-100 rounded-lg shadow-cl w-full max-w-6xl h-[calc(100vh-8rem)]">
+              <div className="flex h-full rounded-lg overflow-hidden">
+                <Sidebar />
+
+                {!selectedUser ? <NoChatSelected /> : <ChatContainer />}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+    export default HomePage;
+    ```
+
+  - ## 12.3) creo los componentes hijos de HomePage:
+
+    - ### 1. `frontend/src/components/NoChatSelected.tsx`
+
+    ```jsx
+    import { MessageSquare } from 'lucide-react';
+
+    const NoChatSelected = () => {
+      return (
+        <div className="w-full flex flex-1 flex-col items-center justify-center p-16 bg-base-100/50">
+          <div className="max-w-md text-center space-y-6">
+            {/* Icon Display */}
+            <div className="flex justify-center gap-4 mb-4">
+              <div className="relative">
+                <div
+                  className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center
+                justify-center animate-bounce"
+                >
+                  <MessageSquare className="w-8 h-8 text-primary " />
+                </div>
+              </div>
+            </div>
+
+            {/* Welcome Text */}
+            <h2 className="text-2xl font-bold">Welcome to Chatty!</h2>
+            <p className="text-base-content/60">
+              Select a conversation from the sidebar to start chatting
+            </p>
+          </div>
+        </div>
+      );
+    };
+
+    export default NoChatSelected;
+    ```
+
+    - ### 2. `frontend/src/components/Sidebar.tsx`
+    - uso el `setSelectedUser` del `useChatStore`
+
+    ```jsx
+    import { useEffect, useState } from 'react';
+    import { useChatStore } from '../store/useChatStore';
+    import { useAuthStore } from '../store/useAuthStore';
+    import SidebarSkeleton from './skeletons/SidebarSkeleton';
+    import { Users } from 'lucide-react';
+
+    const Sidebar = () => {
+      const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
+
+      const { onlineUsers } = useAuthStore();
+      const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+
+      useEffect(() => {
+        getUsers();
+      }, [getUsers]);
+
+      const filteredUsers = showOnlineOnly
+        ? users.filter((user) => onlineUsers.includes(user._id))
+        : users;
+
+      if (isUsersLoading) return <SidebarSkeleton />;
+
+      return (
+        <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
+          <div className="border-b border-base-300 w-full p-5">
+            <div className="flex items-center gap-2">
+              <Users className="size-6" />
+              <span className="font-medium hidden lg:block">Contacts</span>
+            </div>
+            {/* TODO: Online filter toggle */}
+            {/* <div className="mt-3 hidden lg:flex items-center gap-2">
+              <label className="cursor-pointer flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={showOnlineOnly}
+                  onChange={(e) => setShowOnlineOnly(e.target.checked)}
+                  className="checkbox checkbox-sm"
+                />
+                <span className="text-sm">Show online only</span>
+              </label>
+              <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
+            </div> */}
+          </div>
+
+          <div className="overflow-y-auto w-full py-3">
+            {filteredUsers.map((user) => (
+              <button
+                key={user._id}
+                onClick={() => setSelectedUser(user)}
+                className={`
+                  w-full p-3 flex items-center gap-3
+                  hover:bg-base-300 transition-colors
+                  ${selectedUser?._id === user._id ? 'bg-base-300 ring-1 ring-base-300' : ''}
+                `}
+              >
+                <div className="relative mx-auto lg:mx-0">
+                  <img
+                    src={user.profilePic || '/avatar.png'}
+                    // alt={user.name}
+                    className="size-12 object-cover rounded-full"
+                  />
+                  {onlineUsers.includes(user._id) && (
+                    <span
+                      className="absolute bottom-0 right-0 size-3 bg-green-500 
+                      rounded-full ring-2 ring-zinc-900"
+                    />
+                  )}
+                </div>
+
+                {/* User info - only visible on larger screens */}
+                <div className="hidden lg:block text-left min-w-0">
+                  <div className="font-medium truncate">{user.fullName}</div>
+                  <div className="text-sm text-zinc-400">
+                    {onlineUsers.includes(user._id) ? 'Online' : 'Offline'}
+                  </div>
+                </div>
+              </button>
+            ))}
+
+            {filteredUsers.length === 0 && (
+              <div className="text-center text-zinc-500 py-4">No online users</div>
+            )}
+          </div>
+        </aside>
+      );
+    };
+    export default Sidebar;
+    ```
+
+    - componente hijo
+
+      - #### 2.1 skeleton del sidebar `frontend/src/components/skeletons/SidebarSkeleton.tsx`
+
+      ```jsx
+      import { Users } from 'lucide-react';
+
+      const SidebarSkeleton = () => {
+        // Create 8 skeleton items
+        const skeletonContacts = Array(8).fill(null);
+
+        return (
+          <aside
+            className="h-full w-20 lg:w-72 border-r border-base-300 
+          flex flex-col transition-all duration-200"
+          >
+            {/* Header */}
+            <div className="border-b border-base-300 w-full p-5">
+              <div className="flex items-center gap-2">
+                <Users className="w-6 h-6" />
+                <span className="font-medium hidden lg:block">Contacts</span>
+              </div>
+            </div>
+
+            {/* Skeleton Contacts */}
+            <div className="overflow-y-auto w-full py-3">
+              {skeletonContacts.map((_, idx) => (
+                <div key={idx} className="w-full p-3 flex items-center gap-3">
+                  {/* Avatar skeleton */}
+                  <div className="relative mx-auto lg:mx-0">
+                    <div className="skeleton size-12 rounded-full" />
+                  </div>
+
+                  {/* User info skeleton - only visible on larger screens */}
+                  <div className="hidden lg:block text-left min-w-0 flex-1">
+                    <div className="skeleton h-4 w-32 mb-2" />
+                    <div className="skeleton h-3 w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        );
+      };
+
+      export default SidebarSkeleton;
+      ```
+
+    - ### 3. `frontend/src/components/ChatContainer.tsx`
+
+      ```jsx
+      import React from 'react';
+      type Props = {};
+      function ChatContainer({}: Props) {
+        return <div>ChatContainer</div>;
+      }
+      export default ChatContainer;
+      ```
+
+- # 13) ahora vamos con los Online users:
+
+  - ## 13.1)creo en el store el estado global: `frontend/src/store/useAuthStore.ts`
+
+    ```tsx
+    export const useAuthStore = create<AuthStore>((set, get) => ({
+      ....
+      onlineUsers: [],
+
+    ```
+
+  - ## 13.2) uso el store en el componente: `frontend/src/components/Sidebar.tsx`
+
+    ```tsx
+    const Sidebar = () => {
+      const { onlineUsers } = useAuthStore(); //----para saber que usuarios estan online
+    };
+    ```
+
+  - ## 13.3) Antes de continuar creamos el `ChatContainer:`:
+
+    `frontend/src/components/ChatContainer.tsx`
+
+    ```jsx
+    import { useChatStore } from '../store/useChatStore';
+    import { useEffect, useRef } from 'react';
+
+    import ChatHeader from './ChatHeader';
+    import MessageInput from './MessageInput';
+    import MessageSkeleton from './skeletons/MessageSkeleton';
+    import { useAuthStore } from '../store/useAuthStore';
+    import { formatMessageTime } from '../lib/utils';
+
+    const ChatContainer = () => {
+      const {
+        messages,
+        getMessages,
+        isMessagesLoading,
+        selectedUser,
+        subscribeToMessages,
+        unsubscribeFromMessages,
+      } = useChatStore();
+      const { authUser } = useAuthStore();
+      const messageEndRef = useRef(null);
+
+      useEffect(() => {
+        if (!selectedUser?._id) return;
+        getMessages(selectedUser?._id);
+
+        subscribeToMessages();
+
+        return () => unsubscribeFromMessages();
+      }, [selectedUser?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+
+      useEffect(() => {
+        // if (messageEndRef.current && messages) {
+        //   messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        // }
+      }, [messages]);
+
+      if (isMessagesLoading) {
+        return (
+          <div className="flex-1 flex flex-col overflow-auto">
+            <ChatHeader />
+            <MessageSkeleton />
+            <MessageInput />
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex-1 flex flex-col overflow-auto">
+          <ChatHeader />
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message._id}
+                className={`chat ${message.senderId === authUser?._id ? 'chat-end' : 'chat-start'}`}
+                ref={messageEndRef}
+              >
+                <div className=" chat-image avatar">
+                  <div className="size-10 rounded-full border">
+                    <img
+                      src={
+                        message.senderId === authUser?._id
+                          ? authUser.profilePic || '/avatar.png'
+                          : selectedUser?.profilePic || '/avatar.png'
+                      }
+                      alt="profile pic"
+                    />
+                  </div>
+                </div>
+                <div className="chat-header mb-1">
+                  <time className="text-xs opacity-50 ml-1">
+                    {formatMessageTime(message.createdAt)}
+                  </time>
+                </div>
+                <div className="chat-bubble flex flex-col">
+                  {message.image && (
+                    <img
+                      src={message.image}
+                      alt="Attachment"
+                      className="sm:max-w-[200px] rounded-md mb-2"
+                    />
+                  )}
+                  {message.text && <p>{message.text}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <MessageInput />
+        </div>
+      );
+    };
+    export default ChatContainer;
+    ```
+
+  - ### 13.3.1) creamos sus componentes hijos: y nos ponemos para cada uno de ellos:
+
+  ```tsx
+  import ChatHeader from './ChatHeader';
+  import MessageInput from './MessageInput';
+  import MessageSkeleton from './skeletons/MessageSkeleton';
+  import { formatMessageTime } from '../lib/utils';
   ```

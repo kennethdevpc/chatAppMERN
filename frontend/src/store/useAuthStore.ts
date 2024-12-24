@@ -17,7 +17,7 @@ interface AuthStore {
   isLoggingIn: boolean;
   isUpdatingProfile: boolean;
   isCheckingAuth: boolean;
-  onlineUsers: string[];
+  onlineUsers: string[]; //----para saber que usuarios estan online
   socket: ReturnType<typeof io> | null;
   checkAuth: () => Promise<void>;
   signup: (data: { fullName: string; email: string; password: string }) => Promise<void>;
