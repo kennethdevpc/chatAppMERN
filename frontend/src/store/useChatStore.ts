@@ -17,6 +17,10 @@ type User = {
   profilePic: string;
   createdAt: string;
 };
+type SendMessageData = {
+  text: string;
+  image: string | null | ArrayBuffer | undefined;
+};
 type ChatStore = {
   messages: Message[];
   users: User[];
@@ -25,10 +29,10 @@ type ChatStore = {
   isMessagesLoading: boolean;
   getUsers: () => Promise<void>;
   getMessages: (userId: string) => Promise<void>;
-  sendMessage: (messageData: string) => Promise<void>;
+  sendMessage: (message: SendMessageData) => Promise<void>;
   subscribeToMessages: () => void;
   unsubscribeFromMessages: () => void;
-  setSelectedUser: (selectedUser: User) => void;
+  setSelectedUser: (selectedUser: User | null) => void;
 };
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -63,7 +67,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set({ isMessagesLoading: false });
     }
   },
-  sendMessage: async (messageData: string) => {
+  sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser?._id}`, messageData);
@@ -91,8 +95,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   unsubscribeFromMessages: () => {
-    const socket = useAuthStore.getState().socket;
-    socket.off('newMessage');
+    // const socket = useAuthStore.getState().socket;
+    // socket.off('newMessage');
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),

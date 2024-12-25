@@ -1711,7 +1711,7 @@
         reader.readAsDataURL(file);
 
         reader.onload = async () => {
-          const base64Image = reader.result as string;
+          const base64Image = reader.result as string; //aqui se guarda la imagen en formato base64
           setSelectedImg(base64Image);
           await updateProfile({ profilePic: base64Image });
         };
@@ -2123,6 +2123,10 @@
       profilePic: string;
       createdAt: string;
     };
+    type SendMessageData = {
+      text: string;
+      image: string | null | ArrayBuffer | undefined;
+    };
     type ChatStore = {
       messages: string[];
       users: User[];
@@ -2134,7 +2138,7 @@
       sendMessage: (messageData: string) => Promise<void>;
       subscribeToMessages: () => void;
       unsubscribeFromMessages: () => void;
-      setSelectedUser: (selectedUser: User) => void;
+      setSelectedUser: (selectedUser: User | null) => void;
     };
 
     export const useChatStore = create<ChatStore>((set, get) => ({
@@ -2169,7 +2173,7 @@
           set({ isMessagesLoading: false });
         }
       },
-      sendMessage: async (messageData: string) => {
+      sendMessage: async (messageData) => {
         const { selectedUser, messages } = get();
         try {
           const res = await axiosInstance.post(`/messages/send/${selectedUser?._id}`, messageData);
@@ -2550,3 +2554,81 @@
   import MessageSkeleton from './skeletons/MessageSkeleton';
   import { formatMessageTime } from '../lib/utils';
   ```
+
+  - ## 13.4) creamos sus componentes hijos:
+
+    - ### 13.4.1) `ChatHeader:`
+
+      `frontend/src/components/ChatHeader.tsx`
+
+      ```jsx
+      import { X } from 'lucide-react';
+      import { useAuthStore } from '../store/useAuthStore';
+      import { useChatStore } from '../store/useChatStore';
+
+      const ChatHeader = () => {
+        const { selectedUser, setSelectedUser } = useChatStore();
+        const { onlineUsers } = useAuthStore();
+
+        return (
+          <div className="p-2.5 border-b border-base-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <div className="avatar">
+                  <div className="size-10 rounded-full relative">
+                    <img
+                      src={selectedUser?.profilePic || '/avatar.png'}
+                      alt={selectedUser?.fullName}
+                    />
+                  </div>
+                </div>
+
+                {/* User info */}
+                <div>
+                  <h3 className="font-medium">{selectedUser?.fullName}</h3>
+                  <p className="text-sm text-base-content/70">
+                    {selectedUser?._id && onlineUsers.includes(selectedUser._id)
+                      ? 'Online'
+                      : 'Offline'}
+
+                    {/* {onlineUsers.includes(selectedUser._id) ? 'Online' : 'Offline'} */}
+                  </p>
+                </div>
+              </div>
+
+              {/* Close button */}
+              <button onClick={() => setSelectedUser(null)}>
+                <X />
+              </button>
+            </div>
+          </div>
+        );
+      };
+      export default ChatHeader;
+      ```
+
+    - ### 13.4.2) `MessageInput:`
+
+- # 14) ejecucion de una entrada desde un boto:
+
+  cuando se presiona el boton, se envia lo que esta haciendo en el inputn, lo que pasa es ue se coloca en hidden y una ves se de click, se ejecuta el evento en el input
+
+  - mira el ejemplo en `frontend/src/components/MessageInput.tsx`
+
+    ```tsx
+    <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+          />
+
+    <button
+      type="button"
+      className={`hidden sm:flex btn btn-circle
+                ${imagePreview ? 'text-emerald-500' : 'text-zinc-400'}`}
+      onClick={() => fileInputRef.current?.click()} //--esto lo que hace es que la hacer click, va a la "ref={fileInputRef}" osea ejecuta el input anterior
+    >
+    ```

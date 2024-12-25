@@ -18,7 +18,7 @@ interface AuthStore {
   isUpdatingProfile: boolean;
   isCheckingAuth: boolean;
   onlineUsers: string[]; //----para saber que usuarios estan online
-  socket: ReturnType<typeof io> | null;
+  // socket: ReturnType<typeof io> | null;
   checkAuth: () => Promise<void>;
   signup: (data: { fullName: string; email: string; password: string }) => Promise<void>;
   login: (data: { email: string; password: string }) => Promise<void>;
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   isUpdatingProfile: false,
   isCheckingAuth: true,
   onlineUsers: [],
-  socket: null,
+  // socket: null,
 
   checkAuth: async () => {
     try {
