@@ -2448,7 +2448,8 @@
 
   - ## 13.3) Antes de continuar creamos el `ChatContainer:`:
 
-    `frontend/src/components/ChatContainer.tsx`
+    - se utiliza algo similar al chat bubble de daisyUI
+      `frontend/src/components/ChatContainer.tsx`
 
     ```jsx
     import { useChatStore } from '../store/useChatStore';
@@ -2559,7 +2560,8 @@
 
     - ### 13.4.1) `ChatHeader:`
 
-      `frontend/src/components/ChatHeader.tsx`
+      - para ver las caracteiristicas de la pesona con la que tendra el chat
+        `frontend/src/components/ChatHeader.tsx`
 
       ```jsx
       import { X } from 'lucide-react';
@@ -2610,7 +2612,140 @@
 
     - ### 13.4.2) `MessageInput:`
 
-- # 14) ejecucion de una entrada desde un boto:
+      Para poder escribir y encvair el mensaje
+
+      ```tsx
+      import { useRef, useState } from 'react';
+      import { useChatStore } from '../store/useChatStore';
+      import { Image, Send, X } from 'lucide-react';
+      import toast from 'react-hot-toast';
+
+      const MessageInput = () => {
+        const [text, setText] = useState('');
+        const [imagePreview, setImagePreview] = useState<string | null | ArrayBuffer | undefined>(
+          null
+        );
+        const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+        const { sendMessage } = useChatStore();
+
+        const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.target.files?.[0];
+          if (!file?.type.startsWith('image/')) {
+            toast.error('Please select an image file');
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setImagePreview(reader.result); //---->aqui se guarda la imagen en formato base64
+          };
+          reader.readAsDataURL(file);
+        };
+
+        const removeImage = () => {
+          setImagePreview(null);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        };
+
+        const handleSendMessage = async (e: React.FormEvent) => {
+          e.preventDefault();
+          if (!text.trim() && !imagePreview) return;
+
+          try {
+            await sendMessage({
+              text: text.trim(),
+              image: imagePreview,
+            });
+
+            // Clear form
+            setText('');
+            setImagePreview(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+          } catch (error) {
+            console.error('Failed to send message:', error);
+          }
+        };
+
+        return (
+          <div className="p-4 w-full">
+            {imagePreview && (
+              <div className="mb-3 flex items-center gap-2">
+                <div className="relative">
+                  <img
+                    // src={imagePreview}
+                    src={typeof imagePreview === 'string' ? imagePreview : undefined}
+                    alt="Preview"
+                    className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
+                  />
+                  <button
+                    onClick={removeImage}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300
+                    flex items-center justify-center"
+                    type="button"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+              <div className="flex-1 flex gap-2">
+                <input
+                  type="text"
+                  className="w-full input input-bordered rounded-lg input-sm sm:input-md"
+                  placeholder="Type a message..."
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                />
+
+                <button
+                  type="button"
+                  className={`hidden sm:flex btn btn-circle
+                          ${imagePreview ? 'text-emerald-500' : 'text-zinc-400'}`}
+                  onClick={() => fileInputRef.current?.click()} //--esto lo que hace es que la hacer click, va a la "ref={fileInputRef}" osea ejecuta el input anterior
+                >
+                  <Image size={20} />
+                </button>
+              </div>
+              <button
+                type="submit"
+                className="btn btn-sm btn-circle"
+                disabled={!text.trim() && !imagePreview}
+              >
+                <Send size={22} />
+              </button>
+            </form>
+          </div>
+        );
+      };
+      export default MessageInput;
+      ```
+
+    - ### 13.4.3) `formatMessageTime`, para el componente `ChatContainer`:
+
+      - esto es para ver la hora en u formato diferente , ya que el createdAt es un formato como: `2023-08-18T00:00:00.000Z` mientras que con este cambio queda: `00:00`
+      - #### u: `frontend/src/lib/utils.ts`
+
+      ```ts
+      export function formatMessageTime(date: string) {
+        return new Date(date).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        });
+      }
+      ```
+
+- # 14) ejecucion de una entrada desde un boton:
 
   cuando se presiona el boton, se envia lo que esta haciendo en el inputn, lo que pasa es ue se coloca en hidden y una ves se de click, se ejecuta el evento en el input
 
