@@ -2,7 +2,7 @@ import User from '../models/user.model.js';
 import Message from '../models/message.model.js';
 
 import cloudinary from '../lib/cloudinary.js';
-// import { getReceiverSocketId, io } from '../lib/socket.js';
+import { getReceiverSocketId, io } from '../lib/socket.js';
 
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -58,11 +58,12 @@ export const sendMessage = async (req, res) => {
     });
 
     await newMessage.save();
-    //----real time functionality se trabaja despues
-    // const receiverSocketId = getReceiverSocketId(receiverId);
-    // if (receiverSocketId) {
-    //   io.to(receiverSocketId).emit('newMessage', newMessage);
-    // }
+    //----real time functionality para envio de mensajes en tiempo real
+    const receiverSocketId = getReceiverSocketId(receiverId); //----recibe el socket del usuario receptor
+    if (receiverSocketId) {
+      //----si el socket existe, significa que esta conectado, y por lo tanto envia el mensaje
+      io.to(receiverSocketId).emit('newMessage', newMessage); //----envia el mensaeje solo a un usuario
+    }
 
     res.status(201).json(newMessage);
   } catch (error) {

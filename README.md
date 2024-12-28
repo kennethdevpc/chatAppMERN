@@ -2130,7 +2130,7 @@
     type ChatStore = {
       messages: string[];
       users: User[];
-      selectedUser: null | User;
+      selectedUser: null | User; //---es el usuario que se selecciona en el chat
       isUsersLoading: boolean;
       isMessagesLoading: boolean;
       getUsers: () => Promise<void>;
@@ -2770,6 +2770,9 @@
 
 - # 15) Socket.io:
 
+  - **io.emit()** es usado para enviar eventos a todos los clientes conectados
+  - **io.on()** es usado para escuchar eventos de los clientes
+  - **io.to()** es usado para enviar eventos a un solo cliente
   - Entonces esto estara en el backend y en el frontend
   - documentacion:
     - [first tutorials](https://socket.io/docs/v4/tutorial/step-3)
@@ -3088,3 +3091,117 @@
 
     - entonces en este momento, se tendria que si se conectan varios usuarios se veran en linea, y si se desconecta se podra ver que se desconecto el usuario, en tiempo real:
       ![onlineusers](images/23onlineusers.png)
+
+- # 17) envio de mensajes en tiempo real
+
+  - ## 17.0) backend: `backend/src/lib/socket.js`
+
+    creo una funcion que me va a obtener el socket del usuaurio que le pase:
+
+    ```js
+    export function getReceiverSocketId(userId) {
+      return userSocketMap[userId]; //---se obtiene el socket del usuario
+    }
+    ```
+
+  - ## 17.1) backend: `backend/src/controllers/message.controller.js`
+
+    ```js
+    export const sendMessage = async (req, res) => {
+      try {
+        const { text, image } = req.body;
+        const { id: receiverId } = req.params;
+        const senderId = req.user._id;
+
+        let imageUrl;
+        if (image) {
+          // Upload base64 image to cloudinary
+          const uploadResponse = await cloudinary.uploader.upload(image);
+          imageUrl = uploadResponse.secure_url;
+        }
+
+        const newMessage = new Message({
+          senderId,
+          receiverId,
+          text,
+          image: imageUrl,
+        });
+
+        await newMessage.save();
+        //----real time functionality para envio de mensajes en tiempo real
+        const receiverSocketId = getReceiverSocketId(receiverId); //----recibe el socket del usuario receptor
+        if (receiverSocketId) {
+          //----si el socket existe, significa que esta conectado, y por lo tanto envia el mensaje
+          io.to(receiverSocketId).emit('newMessage', newMessage); //----envia el mensaeje solo a un usuario
+        }
+
+        res.status(201).json(newMessage);
+      } catch (error) {
+        console.log('Error in sendMessage controller: ', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    };
+    ```
+
+  - ## 17.2) frontend: `frontend/src/store/useChatStore.ts`
+
+    uso el metodo `getState()` de `zustand`, para poder acceder al estado del store `useAuthStore`:
+    entonces primero subscribo para enviar los mensajes y luego desubscribo para parar de escuchar los mensajes nuevamente
+
+    ```tsx
+    //-------funcion para escuchar los mensajes en tiempo real
+      subscribeToMessages: () => {
+        const { selectedUser } = get(); //---el usuario que se selecciona en el chat
+        if (!selectedUser) return;
+
+        const socket = useAuthStore.getState().socket;
+
+        socket?.on('newMessage', (newMessage) => {
+          // const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+          // if (!isMessageSentFromSelectedUser) return;
+
+          set({
+            messages: [...get().messages, newMessage], //---aqui se actualiza los mensajes  del chat, con lo que viene desde el backend
+          });
+        });
+      },
+
+      unsubscribeFromMessages: () => {
+        const socket = useAuthStore.getState().socket;
+        socket?.off('newMessage');
+      },
+    ```
+
+# teoria zustand:
+
+- #### ¿Qué hace getState()?
+  `getState()` es un método que Zustand incluye automáticamente en cada store. Este método te permite acceder al estado sin necesidad de suscribirte a cambios o usar hooks en componentes funcionales.
+
+En el ejemplo:
+
+```tsx
+const socket = useAuthStore.getState().socket;
+```
+
+1 - `useAuthStore.getState():`
+
+- Obtiene el estado completo del store en ese momento.
+- Devuelve un objeto con todas las propiedades del estado.
+
+2 - .socket:
+
+- Accede específicamente a la propiedad socket del estado.
+
+- #### ¿Qué es useAuthStore?
+  En este caso, `useAuthStore` es un store creado con `Zustand`, que es una biblioteca ligera para manejar el estado en React.
+  Cuando defines un `store` en Zustand, como en este ejemplo:
+
+````tsx
+Copiar código
+import { create } from 'zustand';
+
+export const useAuthStore = create((set, get) => ({
+socket: null, // Una propiedad en el estado inicial
+setSocket: (socketInstance) => set({ socket: socketInstance }), // Acción para actualizar el socket
+}));```
+````

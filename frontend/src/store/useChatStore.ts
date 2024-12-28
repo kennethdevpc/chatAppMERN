@@ -78,25 +78,26 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
+  //-------funcion para escuchar los mensajes en tiempo real
   subscribeToMessages: () => {
-    const { selectedUser } = get();
+    const { selectedUser } = get(); //---el usuario que se selecciona en el chat
     if (!selectedUser) return;
 
-    // const socket = useAuthStore.getState().socket;
+    const socket = useAuthStore.getState().socket;
 
-    // socket.on('newMessage', (newMessage) => {
-    //   const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
-    //   if (!isMessageSentFromSelectedUser) return;
+    socket?.on('newMessage', (newMessage) => {
+      // const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      // if (!isMessageSentFromSelectedUser) return;
 
-    //   set({
-    //     messages: [...get().messages, newMessage],
-    //   });
-    // });
+      set({
+        messages: [...get().messages, newMessage], //---aqui se actualiza los mensajes  del chat, con lo que viene desde el backend
+      });
+    });
   },
 
   unsubscribeFromMessages: () => {
-    // const socket = useAuthStore.getState().socket;
-    // socket.off('newMessage');
+    const socket = useAuthStore.getState().socket;
+    socket?.off('newMessage');
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),

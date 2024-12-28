@@ -12,7 +12,9 @@ const io = new Server(server, {
     // credentials: true,
   },
 });
-
+export function getReceiverSocketId(userId) {
+  return userSocketMap[userId]; //---se obtiene el socket del usuario
+}
 // used to store online users
 const userSocketMap = {}; // {userId: socketId}
 
