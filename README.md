@@ -2612,7 +2612,7 @@
 
     - ### 13.4.2) `MessageInput:`
 
-      Para poder escribir y encvair el mensaje
+      Para poder escribir y enviar el mensaje
 
       ```tsx
       import { useRef, useState } from 'react';
@@ -2767,3 +2767,324 @@
       onClick={() => fileInputRef.current?.click()} //--esto lo que hace es que la hacer click, va a la "ref={fileInputRef}" osea ejecuta el input anterior
     >
     ```
+
+- # 15) Socket.io:
+
+  - Entonces esto estara en el backend y en el frontend
+  - documentacion:
+    - [first tutorials](https://socket.io/docs/v4/tutorial/step-3)
+    - [Server api](https://socket.io/docs/v4/server-api/)
+    - [server-options](https://socket.io/docs/v4/server-options/)
+    - [client api](https://socket.io/docs/v4/client-api/) -[query, por socket](https://socket.io/docs/v4/client-options/#query)
+  - ## 15.1) Backend Socket.io:
+    se instalo `"socket.io": "^4.8.1"`
+  - creo el archivo en el lib:
+  - #### u: `backend/src/lib/socket.js`
+
+    ```js
+    import { Server } from 'socket.io';
+    import http from 'http';
+    import express from 'express';
+
+    const app = express();
+    const server = http.createServer(app);
+
+    const io = new Server(server, {
+      cors: {
+        origin: ['http://localhost:5173'],
+        // methods: ['GET', 'POST'],
+        // credentials: true,
+      },
+    });
+    export { io, app, server };
+    ```
+
+    - ### 15.1.1) voy a crear en el index principal el llamado a el app ya que se crea en el file socket.js: `backend/src/index.js`
+
+      ```js
+      ......
+      import { app, server } from './lib/socket.js'; //----importo el servidor de socket,
+
+
+      // const app = express();//----se llama en el archivo socket.js
+
+      app.use(express.json({ limit: '50mb' }));..
+      ...
+      ......
+      //--------se usa el server que se creo en el archivo socket.js
+      // app.listen(PORT, () => {
+      server.listen(PORT, () => {
+        console.log('Server is running on port ', PORT, `http://localhost:${PORT}/`);
+        connectDB();
+      });
+
+      ```
+
+    - ### 15.1.2) ejemplo inicial como usar socket: `backend/src/lib/socket.js`
+
+      ```js
+      import { Server } from 'socket.io';
+      import http from 'http';
+      import express from 'express';
+
+      const app = express();
+      const server = http.createServer(app);
+
+      const io = new Server(server, {
+        cors: {
+          origin: ['http://localhost:5173'],
+          // methods: ['GET', 'POST'],
+          // credentials: true,
+        },
+      });
+      //---imlementacion de ejemplo de socket.io
+      io.on('connection', (socket) => {
+        // ...
+        console.log('a user connected', socket.id);
+        socket.on('disconnect', () => {
+          console.log('user disconnected');
+        });
+      });
+      export { io, app, server };
+      ```
+
+  - ## 15.2) Frontend Socket.io:
+  - instalo en el cliente:
+
+    ```npm
+    npm i socket.io-client
+    ```
+
+  - Voy al store de Auth, para poder decir que cuando se loguee, se conecte el socket: `frontend/src/store/useAuthStore.ts`
+
+    ```ts
+    import { io } from 'socket.io-client'; //---es el tipo del socket
+
+    const BASE_URL = import.meta.env.MODE === 'development' ? 'http://localhost:5001' : '/';
+
+    interface AuthStore {
+      socket: ReturnType<typeof io> | null; //-------es el tipo del socket
+      connectSocket: () => void; //----es para hacer que se conecte el socket
+      disconnectSocket: () => void; //----es para hacer que se desconecte el socket
+    }
+
+    export const useAuthStore = create<AuthStore>((set, get) => ({
+      authUser: null,
+      socket: null, //----es el estado para guardar el socket
+
+      checkAuth: async () => {
+        try {
+
+          const res = await axiosInstance.get('/auth/check');
+          set({ authUser: res.data });
+          //-----------llama a la funcion connectSocket
+          get().connectSocket();
+        } catch (error) {
+          console.log('Error in checkAuth:', error);
+          set({ authUser: null });
+        } finally {
+          set({ isCheckingAuth: false });
+        }
+      },
+
+      signup: async (data) => {
+        set({ isSigningUp: true });
+        try {
+          const res = await axiosInstance.post('/auth/signup', data);
+          set({ authUser: res.data });
+          toast.success('Account created successfully');
+          //-----------llama a la funcion connectSocket
+          get().connectSocket();
+        } catch (error) {
+          // toast.error(error.response.data.message);
+          toast.error((error as Error).message);
+        } finally {
+          set({ isSigningUp: false });
+        }
+      },
+
+      login: async (data) => {
+        set({ isLoggingIn: true });
+        try {
+          const res = await axiosInstance.post('/auth/login', data);
+          set({ authUser: res.data });
+          toast.success('Logged in successfully');
+          //-----------llama a la funcion connectSocket
+          get().connectSocket();
+        } catch (error) {
+          // toast.error(error.response.data.message);
+          toast.error((error as Error).message);
+        } finally {
+          set({ isLoggingIn: false });
+        }
+      },
+
+      logout: async () => {
+        try {
+          await axiosInstance.post('/auth/logout');
+          set({ authUser: null });
+          toast.success('Logged out successfully');
+          get().disconnectSocket();
+        } catch (error) {
+          toast.error((error as Error).message);
+          // toast.error(error.response.data.message);
+        }
+      },
+
+      ...
+      //---se utiliza el connectSocket en el login y en el signup y en checkAuth, ya que cuando se autentica se deberia conectar el socket
+      connectSocket: () => {
+        const { authUser } = get();
+
+        if (!authUser || get().socket?.connected) return;
+
+        const socket = io(
+          BASE_URL
+          // , {
+          // query: {
+          //   userId: authUser._id,
+          // },
+          // }
+        );
+
+        // socket.connect();
+        console.log('entro al conect socketds', get().socket?.connected);
+
+        // set({ socket: socket });
+
+        // socket.on('getOnlineUsers', (userIds) => {
+        //   set({ onlineUsers: userIds });
+        // });
+      },
+      //---se utiliza el disconnectSocket en el logout, se deberia desconectar el socket
+
+      disconnectSocket: () => {
+        // if (get().socket?.connected) get().socket.disconnect();
+      },
+    }));
+    ```
+
+    hasta aqui se puede ver en la terminal del back, los mensajes del `backend/src/lib/socket.js`:
+
+    - pero solo se muestran si accede al front, ya que desde el front es que se ejecuta la accion: `frontend/src/store/useAuthStore.ts`
+
+      ```js
+      //---Cuando se ejecuta este fragmento se conecta el socket, y se muestra el mensaje del back
+      const socket = io(BASE_URL);
+      ```
+
+    - al acceder al servidos se muestra entonces:
+      `http://localhost:5173/`
+
+    ```bash
+    Server is running on port  5001 http://localhost:5001/
+    a user connected, con socket:  O3xHKTphseOu5hb0AAAB
+    MongoDB connected: cluster0-shard-00-01.jaken.mongodb.net
+    a user connected, con socket:  Yi1vmRIOSZAZLfEZAAAD
+
+    ```
+
+  - ### 15.2.2) en el useAuthStore.ts, se debe colocar el disconectSocket para permitir que se desconecte el socket cuando se desloguea: `frontend/src/store/useAuthStore.ts`
+
+    ```js
+    //---cuando se haga la accion de logout, se deberia desconectar el socket
+    //----por lo tanto se debe implementar una funcion que desconecte el socket, ya que solo se esta desconectando si se cierra la aplicacion
+    disconnectSocket: () => {
+      if (get().socket?.connected) get().socket?.disconnect();
+    },
+    ```
+
+- # 16) socket.io, usuarios en linea
+
+  - ## 16.1) uso del query para llamar el dato del usuario desde el frontend al backend
+
+    Me dirijo al backend:
+
+    - #### u : `backend/src/lib/socket.js`
+
+    ```js
+    io.on('connection', (socket) => {
+      //------asi se llama desde el Backend
+      const { userId, otherYouWant } = socket.handshake.query;
+      console.log('\n Query from client:', userId);
+
+      socket.on('disconnect', () => {
+        console.log('backend, user disconnected socket: ', socket.id);
+      });
+    });
+    ```
+
+  - ## 16.2) uso del query para enviarle el dato desde el frontend al backend:
+
+    - #### u: `frontend/src/store/useAuthStore.ts`
+
+    ```js
+    ....
+        connectSocket: () => {
+        const { authUser } = get();
+        if (!authUser || get().socket?.connected) return;
+        //---asi se le envia la query
+        const socket = io(BASE_URL, {
+          query: {
+            otherYouWant: 'other dessired data',
+            userId: authUser._id,
+          },
+        });
+        socket.connect();
+        console.log('entro al conect socketds', get().socket?.connected);
+        set({ socket: socket }); //---guarda el socket en el estado
+
+      },
+    ```
+
+  - ## 16.3) usando la query vmaos a llenar un objeto con los usuarios en linea en el backend:
+
+        - #### u: `backend/src/lib/socket.js`
+
+        ```js
+
+
+        io.on('connection', (socket) => {
+
+
+        const { userId, otherYouWant } = socket.handshake.query;
+        if (userId) userSocketMap[userId] = socket.id; //---se llena el objeto con el id del usuario y el socket
+
+        // io.emit() es usado para enviar eventos a todos los clientes conectados
+        io.emit('getOnlineUsers', Object.keys(userSocketMap));
+
+        socket.on('disconnect', () => {
+        delete userSocketMap[userId];
+        io.emit('getOnlineUsers', Object.keys(userSocketMap)); //---al desconectarre debe quitar el usuario de los usuarios conectados y enviar la lista actualizada
+        });
+        });
+        export { io, app, server };
+        ```
+
+  - ## 16.4) usando la informacion del socket, vamos a tomar los usuarios conectados: `frontend/src/store/useAuthStore.ts`
+  - se ejecuta el evento `getOnlineUsers`, que es un evento que se emite desde el `servidor` en :
+
+    - `backend/src/lib/socket.js`, es decir se trae la informacion desde el `backend`
+
+    ```ts
+     connectSocket: () => {
+    const { authUser } = get();
+    if (!authUser || get().socket?.connected) return;
+    const socket = io(BASE_URL, {
+      query: {otherYouWant: 'other dessired data',userId: authUser._id,
+      },
+    });
+
+    socket.connect();
+    set({ socket: socket });
+    //--------se ejecuta el evento getOnlineUsers,
+
+    socket.on('getOnlineUsers', (userIds) => {
+      set({ onlineUsers: userIds });
+    });
+    },
+
+    ```
+
+    - entonces en este momento, se tendria que si se conectan varios usuarios se veran en linea, y si se desconecta se podra ver que se desconecto el usuario, en tiempo real:
+      ![onlineusers](images/23onlineusers.png)
