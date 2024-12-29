@@ -2202,7 +2202,7 @@
 
       unsubscribeFromMessages: () => {
         const socket = useAuthStore.getState().socket;
-        socket.off('newMessage');
+        socket.off('newMessage');//--Esto significa que el socket dejará de escuchar el evento 'newMessage'.
       },
 
       setSelectedUser: (selectedUser) => set({ selectedUser }),
@@ -3107,6 +3107,9 @@
   - ## 17.1) backend: `backend/src/controllers/message.controller.js`
 
     ```js
+    import { getReceiverSocketId, io } from '../lib/socket.js';
+    ....
+
     export const sendMessage = async (req, res) => {
       try {
         const { text, image } = req.body;
@@ -3168,9 +3171,11 @@
 
       unsubscribeFromMessages: () => {
         const socket = useAuthStore.getState().socket;
-        socket?.off('newMessage');
+        socket?.off('newMessage');//---Esto significa que el socket dejará de escuchar el evento 'newMessage'.
       },
     ```
+
+  - ## 17.3)vamos al container donde se proyectan los mensajes: ChatContainer: `frontend/src/components/ChatContainer.tsx`
 
 # teoria zustand:
 

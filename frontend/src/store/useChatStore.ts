@@ -97,7 +97,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
-    socket?.off('newMessage');
+    socket?.off('newMessage'); //--Esto significa que el socket dejará de escuchar el evento 'newMessage'.
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),

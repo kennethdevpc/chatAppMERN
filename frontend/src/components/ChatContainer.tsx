@@ -13,8 +13,8 @@ const ChatContainer = () => {
     getMessages,
     isMessagesLoading,
     selectedUser,
-    subscribeToMessages,
-    unsubscribeFromMessages,
+    subscribeToMessages, //-----funcion que se encarga de escuchar los mensajes en tiempo real
+    unsubscribeFromMessages, //---funcion que se encarga de dejar de escuchar los mensajes en tiempo real, ya que se deja de escuchar el evento 'newMessage'
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
@@ -23,9 +23,9 @@ const ChatContainer = () => {
     if (!selectedUser?._id) return;
     getMessages(selectedUser?._id);
 
-    subscribeToMessages();
+    subscribeToMessages(); //---me suscribo y lleno los mensajes en tiempo real
 
-    return () => unsubscribeFromMessages();
+    return () => unsubscribeFromMessages(); //---una vez lleno el estado de los mensajes, me desuscribo
   }, [selectedUser?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
 
   useEffect(() => {
