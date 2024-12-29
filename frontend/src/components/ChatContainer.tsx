@@ -17,7 +17,8 @@ const ChatContainer = () => {
     unsubscribeFromMessages, //---funcion que se encarga de dejar de escuchar los mensajes en tiempo real, ya que se deja de escuchar el evento 'newMessage'
   } = useChatStore();
   const { authUser } = useAuthStore();
-  const messageEndRef = useRef(null);
+
+  const messageEndRef = useRef<HTMLDivElement>(null); //---se crea una referencia para el scroll
 
   useEffect(() => {
     if (!selectedUser?._id) return;
@@ -29,10 +30,10 @@ const ChatContainer = () => {
   }, [selectedUser?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
 
   useEffect(() => {
-    // if (messageEndRef.current && messages) {
-    //   messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    // }
-  }, [messages]);
+    if (messageEndRef.current && messages) {
+      messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]); //---cada vez que se actualice el estado de los mensajes, se ejecuta el scroll
 
   if (isMessagesLoading) {
     return (
@@ -53,6 +54,7 @@ const ChatContainer = () => {
           <div
             key={message._id}
             className={`chat ${message.senderId === authUser?._id ? 'chat-end' : 'chat-start'}`}
+            //----- aqui se coloca el ref para ejectuar el scroll
             ref={messageEndRef}
           >
             <div className=" chat-image avatar">

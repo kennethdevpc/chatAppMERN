@@ -86,8 +86,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     const socket = useAuthStore.getState().socket;
 
     socket?.on('newMessage', (newMessage) => {
-      // const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
-      // if (!isMessageSentFromSelectedUser) return;
+      //----aqui se verifica que el ususario solo pueda enviar mensajes a chats que se selecciona dentro de su propio servidor
+      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      if (!isMessageSentFromSelectedUser) return;
 
       set({
         messages: [...get().messages, newMessage], //---aqui se actualiza los mensajes  del chat, con lo que viene desde el backend

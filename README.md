@@ -2471,7 +2471,7 @@
         unsubscribeFromMessages,
       } = useChatStore();
       const { authUser } = useAuthStore();
-      const messageEndRef = useRef(null);
+      const messageEndRef = useRef < HTMLDivElement > null;
 
       useEffect(() => {
         if (!selectedUser?._id) return;
@@ -3175,7 +3175,153 @@
       },
     ```
 
-  - ## 17.3)vamos al container donde se proyectan los mensajes: ChatContainer: `frontend/src/components/ChatContainer.tsx`
+  - ## 17.3)vamos al container donde se proyectan los mensajes: ChatContainer:
+
+    `frontend/src/components/ChatContainer.tsx`
+
+    ```tsx
+
+    import { useAuthStore } from '../store/useAuthStore';
+    import { formatMessageTime } from '../lib/utils';
+
+    const ChatContainer = () => {
+      const {
+        ...
+        subscribeToMessages, //-----funcion que se encarga de escuchar los mensajes en tiempo real
+        unsubscribeFromMessages, //---funcion que se encarga de dejar de escuchar los mensajes en tiempo real, ya que se deja de escuchar el evento 'newMessage'
+      } = useChatStore();
+      const { authUser } = useAuthStore();
+      const messageEndRef =  useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!selectedUser?._id) return;
+        getMessages(selectedUser?._id);
+
+        subscribeToMessages(); //---me suscribo y lleno los mensajes en tiempo real
+
+        return () => unsubscribeFromMessages(); //---una vez lleno el estado de los mensajes, me desuscribo
+      }, [selectedUser?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+
+    ```
+
+  - ## 17.4) ffuncionalidad de scrooll automaticamente baja cuando se escribe un mensaje: `frontend/src/components/ChatContainer.tsx`
+
+    ```tsx
+    const messageEndRef = useRef<HTMLDivElement>(null); //---se crea una referencia para el scroll
+    //....
+    useEffect(() => {
+      if (messageEndRef.current && messages) {
+        messageEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, [messages]); //---cada vez que se actualice el estado de los mensajes, se ejecuta el scroll
+    return (
+    <div className="flex-1 flex flex-col overflow-auto">
+      <ChatHeader />
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message._id}
+            className={`chat ${message.senderId === authUser?._id ? 'chat-end' : 'chat-start'}`}
+            //----- aqui se coloca el ref para ejectuar el scroll
+            ref={messageEndRef}
+          >
+            //...
+            //....
+    ```
+
+- # 18) creando Seed pra los usuarios en linea:
+
+  - creo el archivo seed:
+
+  ```js
+  import { config } from 'dotenv';
+  import { connectDB } from '../lib/db.js';
+  import User from '../models/user.model.js';
+
+  config();
+
+  const seedUsers = [
+    {
+      email: 'pikachu@example.com',
+      fullName: 'Pikachu Electric',
+      password: '123456',
+      profilePic: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png', // Pikachu
+    },
+    {
+      email: 'charizard@example.com',
+      fullName: 'Charizard Blaze',
+      password: '123456',
+      profilePic: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png', // Charizard
+    },
+    {
+      email: 'bulbasaur@example.com',
+      fullName: 'Bulbasaur Grass',
+      password: '123456',
+      profilePic: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png', // Bulbasaur
+    },
+    {
+      email: 'squirtle@example.com',
+      fullName: 'Squirtle Water',
+      password: '123456',
+      profilePic: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png', // Squirtle
+    },
+    {
+      email: 'jigglypuff@example.com',
+      fullName: 'Jigglypuff Song',
+      password: '123456',
+      profilePic: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/39.png', // Jigglypuff
+    },
+  ];
+
+  const seedDatabase = async () => {
+    try {
+      await connectDB();
+
+      await User.insertMany(seedUsers);
+      console.log('Database seeded successfully');
+    } catch (error) {
+      console.error('Error seeding database:', error);
+    }
+  };
+
+  // Call the function
+  seedDatabase();
+  ```
+
+  - corro el comnado en la terminal del backend:
+  - `  backend git:(main) ✗`
+
+  ```bash
+    node src/seeds/user.seed.js
+  ```
+
+- # 19) mejora en el useChatStore.ts, ya que se envia mensajes a seeccionados en otros sevidores
+
+  - en el momento si abre dos servidorese y selecciona en uno de ellos un chat, y si se posisiona en el input es decisr donde se dijita el texto , lo que hara es que no podra serciorarse que se tiene el chat que realmente se selecciono en el servidor , es decir si tengo servidor 1 a la izq, y servidor 2 a la derecha, y si selecciono en serv 2 un chat "YY", y si luego o justo despues selecciono en el serv1 un chat "xx" al escribir en el chat del serv 2 se enviara el mensaje al chat que se selecciono de ultimo , scon lo cual eso no es lo que se espera en una aplcacion chat
+  - para evitar esto
+  - `frontend/src/store/useChatStore.ts`
+
+  ```tsx
+    //-------funcion para escuchar los mensajes en tiempo real
+    subscribeToMessages: () => {
+      const { selectedUser } = get(); //---el usuario que se selecciona en el chat
+      if (!selectedUser) return;
+
+      const socket = useAuthStore.getState().socket;
+
+      socket?.on('newMessage', (newMessage) => {
+        //----aqui se verifica que el ususario solo pueda enviar mensajes a chats que se selecciona dentro de su propio servidor
+        const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+        if (!isMessageSentFromSelectedUser) return;
+
+        set({
+          messages: [...get().messages, newMessage], //---aqui se actualiza los mensajes  del chat, con lo que viene desde el backend
+        });
+      });
+    },
+
+  ```
 
 # teoria zustand:
 
