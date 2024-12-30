@@ -3388,7 +3388,7 @@
 
   ```
 
-- # 21) deploy - usaremos un solo servidor para back y front
+- # 21) deploy - usaremos un solo servidor para back y front usando [render](https://dashboard.render.com/)
 
   - primero instalaos en el front para evitar algunos errores:
 
@@ -3527,6 +3527,11 @@
     const BASE_URL = import.meta.env.MODE === 'development' ? 'http://localhost:5001' : '/';
     ```
 
+  - ## 21.6) voy a render y creo una nueva `web service`
+    - configuracion 1: ![configuracion 1](images/24-deploy1.png)
+    - configuracion 2: ![configuracion 2](images/24-deploy2.png)
+    - configuracion 3: ![configuracion 3](images/25-deploy3.png)
+
 - # 22) creando una privatekey:
 
   - ```bash
@@ -3538,6 +3543,10 @@
       ```bash
       a2QauHGRnLOVufsfhJhhtW/vigqaMV9oh/br7iAAJb4=
       ```
+
+- # 23) con vercel es difeerente se crean las aplicaicones por separado :
+
+  - creo un archivo d configuracin de vercel: -` chatapp/vercel.json`
 
   ***
 
