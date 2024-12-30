@@ -3388,6 +3388,147 @@
 
   ```
 
+- # 21) deploy - usaremos un solo servidor para back y front
+
+  - primero instalaos en el front para evitar algunos errores:
+
+    ```bash
+          error TS2688: Cannot find type definition file for 'babel__generator'.
+        The file is in the program because:
+          Entry point for implicit type library 'babel__generator'
+
+      error TS2688: Cannot find type definition file for 'babel__template'.
+        The file is in the program because:
+          Entry point for implicit type library 'babel__template'
+
+      error TS2688: Cannot find type definition file for 'babel__traverse'.
+        The file is in the program because:
+          Entry point for implicit type library 'babel__traverse'
+
+      error TS2688: Cannot find type definition file for 'prop-types'.
+        The file is in the program because:
+          Entry point for implicit type library 'prop-types'
+    ```
+
+    ```bash
+    npm install --save-dev @types/babel__generator @types/babel__template @types/babel__traverse @types/prop-types
+    ```
+
+  - ## 21.1) En el package.json del back : `backend/package.json`
+
+    ```json
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "dev": "nodemon src/index.js",
+      "start": "node src/index.js" //-----agregamos el start, para produccion
+    },
+    ```
+
+  - ## 21.2) se creal otro package.json en la misma carpeta que continee el bakend y el frontend,
+  - me paro en la terminal y ejecuto
+
+    - en la terminal `chatapp git:(main) ✗`
+
+    ```bash
+      npm init -y
+    ```
+
+    - se crea entonces esto: `individual_projects/chatapp/package.json`
+
+      ```json
+      {
+        "name": "chatapp",
+        "version": "1.0.0",
+        "description": "- estoy usando Sniped (es7) - vscode great icons - Tailwind CSS IntelliSense",
+        "main": "index.js",
+        "scripts": {
+          "test": "echo \"Error: no test specified\" && exit 1",
+          "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
+          "start": "npm run start --prefix backend"
+        },
+        "keywords": [],
+        "author": "",
+        "license": "ISC"
+      }
+      ```
+
+      al ejecutar en la terminal `chatapp git:(main) ✗`
+
+      ```bash
+       npm run build
+      ```
+
+      se otendra en el frontend una carpeta `frontend/dist` que contiene toda la app frontend
+
+  - ## 21.3) En el index.js del backend : `backend/src/index.js`
+  - **Comodín app.get('\*'):**
+
+    La ruta **app.get('\*')**sigue sirviendo el archivo `index.html` para todas las solicitudes GET no coincidentes, como cuando el usuario navega a una ruta que no está definida en la API `(por ejemplo, /home, /profile, etc.).`
+    Esto asegura que la aplicación frontend (SPA) pueda funcionar correctamente, ya que todas las rutas de frontend llevan al mismo archivo `index.html`
+
+    ```js
+    //----
+    import dotenv from 'dotenv';
+
+    import path from 'path'; //----importo path, de node - "configuracion para produccion"
+
+    //----
+
+    dotenv.config();
+    const PORT = process.env.PORT;
+    const __dirname = path.resolve(); //----creo una variable para guardar la ruta del directorio actual -"configuracion para produccion"
+
+    app.use(express.json({ limit: '50mb' }));
+    app.use(cookieParser());
+    app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+    app.get('/', (req, res) => {
+      res.send('hola');
+    });
+    app.use('/api/auth', authRoutes);
+    app.use('/api/messages', messageRoutes);
+
+    //----------"configuracion para produccion"
+    if (process.env.NODE_ENV === 'production') {
+      app.use(express.static(path.join(__dirname, '../frontend/dist'))); //---entonces aqui usa los archivos estaticos
+
+      app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));
+      });
+    }
+
+    //--------se usa el server que se creo en el archivo socket.js
+    // app.listen(PORT, () => {
+    server.listen(PORT, () => {
+      console.log('Server is running on port ', PORT, `http://localhost:${PORT}/`);
+      connectDB(); //------conecto la base de datos
+    });
+    ```
+
+  - ## 21.4) En el axios tengo que configurar la ruta de produccion: del frontend : `frontend/src/lib/axios.ts`
+
+    ```ts
+    import axios from 'axios';
+
+    export const axiosInstance = axios.create({
+      // baseURL: 'http://localhost:5001/api',
+      baseURL: import.meta.env.MODE === 'development' ? 'http://localhost:5001/api' : '/api',
+      withCredentials: true,
+    });
+    ```
+
+  - ## 21.5) En el useAuthStore.ts del frontend : `frontend/src/store/useAuthStore.ts`
+
+    ```tsx
+    import { create } from 'zustand';
+    import { axiosInstance } from '../lib/axios.js';
+    import toast from 'react-hot-toast';
+    import { io } from 'socket.io-client'; //---es el tipo del socket
+    //----para produccion se selecciona el development
+    const BASE_URL = import.meta.env.MODE === 'development' ? 'http://localhost:5001' : '/';
+    ```
+
+  ***
+
 # teoria zustand:
 
 - #### ¿Qué hace getState()?
