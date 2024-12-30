@@ -1,9 +1,0 @@
-MONGODB_URI=mongodb+srv://ingkeneidel:KnsvsOgVrNkxf9NH@cluster0.jaken.mongodb.net/chatAppDB?retryWrites=true&w=majority&appName=Cluster0
-PORT=5001
-JWT_SECRET=cualquierPalabra
-
-CLOUDINARY_CLOUD_NAME=xdiep0nzvs
-CLOUDINARY_API_KEY=00653499713116286
-CLOUDINARY_API_SECRET=xjOnwDremPYNKkXtQolBslosmptE
-
-NODE_ENV=development
