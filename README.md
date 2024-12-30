@@ -3527,6 +3527,18 @@
     const BASE_URL = import.meta.env.MODE === 'development' ? 'http://localhost:5001' : '/';
     ```
 
+- # 22) creando una privatekey:
+
+  - ```bash
+     openssl rand -base64 32
+    ```
+
+    - me da como resultado :
+
+      ```bash
+      a2QauHGRnLOVufsfhJhhtW/vigqaMV9oh/br7iAAJb4=
+      ```
+
   ***
 
 # teoria zustand:
