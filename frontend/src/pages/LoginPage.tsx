@@ -18,7 +18,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen grid lg:grid-cols-2">
+    <div className="h-screen grid lg:grid-cols-1 pt-10">
       {/* Left Side - Form */}
       <div className="flex flex-col justify-center items-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-8">
@@ -31,7 +31,7 @@ const LoginPage = () => {
               >
                 <MessageSquare className="w-6 h-6 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold mt-2">Welcome Back</h1>
+              <h1 className="text-2xl font-bold mt-2">Welcome to chatZone</h1>
               <p className="text-base-content/60">Sign in to your account</p>
             </div>
           </div>
@@ -110,8 +110,8 @@ const LoginPage = () => {
 
       {/* Right Side - Image/Pattern */}
       <AuthImagePattern
-        title={'Welcome back!'}
-        subtitle={'Sign in to continue your conversations and catch up with your messages.'}
+        title={'Prepare for a conversation!'}
+        subtitle={'create a count and start to chat in this great community'}
       />
     </div>
   );
